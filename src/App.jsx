@@ -37,6 +37,7 @@ import AdminGalleryPage from './pages/admin/AdminGalleryPage';
 import AdminContactsPage from './pages/admin/AdminContactsPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminProjectsPage from './pages/admin/AdminProjectsPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 
 function App() {
   return (
@@ -68,6 +69,12 @@ function App() {
           {/* Donation result pages (standalone, no layout) */}
           <Route path="/donation-success" element={<DonationSuccessPage />} />
           <Route path="/donation-failure" element={<DonationFailurePage />} />
+
+          <Route path="/change-password" element={
+            <ProtectedRoute>
+              <ChangePasswordPage />
+            </ProtectedRoute>
+          } />
 
           {/* Admin Routes (Protected + Admin Only) */}
           <Route path="/admin" element={

@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, FileText, Image, Heart, MessageSquare,
-  UserCheck, CreditCard, Settings, LogOut, Shield
+  UserCheck, CreditCard, Settings, LogOut, Shield, Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -59,6 +59,17 @@ export default function AdminSidebar() {
             </Link>
           );
         })}
+        <Link
+          to="/change-password"
+          className={`flex items-center gap-3 px-6 py-3 mx-2 rounded-lg transition-all ${
+            location.pathname === '/change-password'
+              ? 'bg-orange-500 text-white'
+              : 'text-gray-300 hover:bg-white/10 hover:text-white'
+          }`}
+        >
+          <Lock size={20} />
+          <span className="font-medium">Change Password</span>
+        </Link>
       </nav>
 
       {/* User */}

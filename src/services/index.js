@@ -4,6 +4,7 @@ export const authService = {
   login: (email, password) => api.post('/api/auth/login', { email, password }),
   forgotPassword: (email) => api.post('/api/auth/forgot-password', { email }),
   resetPassword: (token, password) => api.post('/api/auth/reset-password', { token, password }),
+  changePassword: (data) => api.put('/api/auth/change-password', data),
 };
 
 export const donationService = {

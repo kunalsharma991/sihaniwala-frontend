@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Heart, FileText, CreditCard, User, Calendar, ArrowRight } from 'lucide-react';
+import { Heart, FileText, CreditCard, User, Calendar, ArrowRight, Lock } from 'lucide-react';
 
 export default function UserDashboard() {
   const { user } = useAuth();
@@ -38,6 +38,12 @@ export default function UserDashboard() {
               </div>
             </div>
           </motion.div>
+
+          <div className="flex flex-wrap gap-3 mb-8">
+            <Link to="/change-password" className="inline-flex items-center gap-2 rounded-full border border-[#0d2c54] px-4 py-2 text-sm font-semibold text-[#0d2c54] hover:bg-[#0d2c54] hover:text-white transition">
+              <Lock size={16} /> Change Password
+            </Link>
+          </div>
 
           {/* Quick Actions */}
           <div className="grid md:grid-cols-3 gap-6 mb-8">

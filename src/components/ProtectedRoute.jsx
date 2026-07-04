@@ -19,8 +19,7 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
     return <Navigate to="/admin/login" replace />;
   }
 
-  // All protected routes require admin role now
-  if (!isAdmin()) {
+  if (adminOnly && !isAdmin()) {
     return <Navigate to="/admin/login" replace />;
   }
 
