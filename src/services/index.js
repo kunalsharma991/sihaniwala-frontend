@@ -36,6 +36,10 @@ export const adminService = {
   getContacts: () => api.get('/api/admin/contacts'),
   getUsers: () => api.get('/api/admin/users'),
   getDonations: () => api.get('/api/admin/donations'),
+  getAdminProjects: () => api.get('/api/admin/projects'),
+  createAdminProject: (data) => api.post('/api/admin/projects', data),
+  updateAdminProject: (id, data) => api.put(`/api/admin/projects/${id}`, data),
+  deleteAdminProject: (id) => api.delete(`/api/admin/projects/${id}`),
 };
 
 export const contactService = {
