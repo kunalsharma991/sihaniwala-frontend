@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, X, Save } from 'lucide-react';
 import { adminService } from '../../services';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 const emptyForm = { title: '', description: '', location: '', status: 'ACTIVE', beneficiaries: '' };
 
