@@ -27,7 +27,7 @@ export const initiativeService = {
 
 export const adminService = {
   getDashboard: () => api.get('/api/admin/dashboard'),
-  getApplications: (params) => api.get('/api/admin/applications', { params }),
+  getApplications: (params) => api.get('/api/admin/applications', params ? { params } : {}),
   updateApplicationStatus: (id, status) => api.put(`/api/admin/applications/${id}/status`, { status }),
   getGallery: () => api.get('/api/admin/gallery'),
   deleteGalleryItem: (id) => api.delete(`/api/admin/gallery/${id}`),
