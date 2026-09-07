@@ -323,7 +323,7 @@ export default function DonatePage() {
               {/* Payment Method Selection */}
               <div className="mb-6">
                 <label className="block text-sm font-bold text-gray-700 mb-3">Select Payment Method</label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <button
                     onClick={() => setPaymentMethod('razorpay')}
                     disabled={currency !== 'INR'}
@@ -362,11 +362,75 @@ export default function DonatePage() {
                     <p className="text-xs text-gray-500 ml-8">Cards, PayPal Balance, Bank</p>
                     <span className="inline-block mt-2 ml-8 text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">International</span>
                   </button>
+
+                  <button
+                    onClick={() => setPaymentMethod('bank')}
+                    className={`relative p-5 rounded-2xl border-2 transition-all text-left ${
+                      paymentMethod === 'bank'
+                        ? 'border-orange-500 bg-orange-50 shadow-lg shadow-orange-500/10'
+                        : 'border-gray-200 hover:border-orange-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'bank' ? 'border-orange-500' : 'border-gray-300'}`}>
+                        {paymentMethod === 'bank' && <div className="w-3 h-3 rounded-full bg-orange-500" />}
+                      </div>
+                      <span className="font-bold text-[#0d2c54]">Bank Transfer</span>
+                    </div>
+                    <p className="text-xs text-gray-500 ml-8">Direct account transfer</p>
+                    <span className="inline-block mt-2 ml-8 text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">All Donors</span>
+                  </button>
                 </div>
               </div>
 
+              {paymentMethod === 'bank' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 space-y-4">
+                  <h3 className="text-lg font-bold text-[#0d2c54] flex items-center gap-2">
+                    🏦 Direct Bank Transfer
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Please transfer the donation amount to the account below and send a screenshot to our WhatsApp or email for confirmation.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="bg-white rounded-lg p-3 border">
+                      <p className="text-xs text-gray-400 uppercase font-medium">Bank Name</p>
+                      <p className="font-semibold text-[#0d2c54]">State Bank of India</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <p className="text-xs text-gray-400 uppercase font-medium">Account Holder</p>
+                      <p className="font-semibold text-[#0d2c54]">Sihaniwala Foundation Charitable Trust</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <p className="text-xs text-gray-400 uppercase font-medium">Account Number</p>
+                      <p className="font-semibold text-[#0d2c54] tracking-wider">39812345678901</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <p className="text-xs text-gray-400 uppercase font-medium">IFSC Code</p>
+                      <p className="font-semibold text-[#0d2c54]">SBIN0012345</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <p className="text-xs text-gray-400 uppercase font-medium">Account Type</p>
+                      <p className="font-semibold text-[#0d2c54]">Current Account</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <p className="text-xs text-gray-400 uppercase font-medium">UPI ID</p>
+                      <p className="font-semibold text-[#0d2c54]">sihaniwala.foundation@sbi</p>
+                    </div>
+                  </div>
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <p className="text-sm text-orange-700 font-medium">📱 After transfer, send screenshot to:</p>
+                    <p className="text-sm text-orange-800 font-semibold">WhatsApp: +91-9876543210 | Email: donate@sihaniwala.org</p>
+                  </div>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <p className="text-sm text-green-700">
+                      ✅ All donations to Sihaniwala Foundation Charitable Trust are eligible for <strong>80G tax exemption</strong>.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Pay Button */}
-              <button
+              {paymentMethod !== 'bank' && <button
                 onClick={handlePayment}
                 disabled={loading || (paymentMethod === 'razorpay' && currency !== 'INR')}
                 className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-xl font-bold hover:shadow-xl hover:shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
@@ -387,13 +451,13 @@ export default function DonatePage() {
                     Pay {currency === 'INR' ? '₹' : currency === 'USD' ? '$' : '€'}{finalAmount?.toLocaleString()} via PayPal
                   </>
                 )}
-              </button>
+              </button>}
 
               {/* Security badges */}
               <div className="flex items-center justify-center gap-4 text-[11px] text-gray-400 pt-4">
                 <span className="flex items-center gap-1"><Shield size={12} /> SSL Encrypted</span>
                 <span className="w-1 h-1 bg-gray-300 rounded-full" />
-                <span className="flex items-center gap-1"><Lock size={12} /> {paymentMethod === 'razorpay' ? 'Secured by Razorpay' : 'Secured by PayPal'}</span>
+                <span className="flex items-center gap-1"><Lock size={12} /> {paymentMethod === 'razorpay' ? 'Secured by Razorpay' : paymentMethod === 'paypal' ? 'Secured by PayPal' : 'Direct Bank Transfer'}</span>
                 <span className="w-1 h-1 bg-gray-300 rounded-full" />
                 <span className="flex items-center gap-1"><CheckCircle size={12} /> PCI Compliant</span>
               </div>
