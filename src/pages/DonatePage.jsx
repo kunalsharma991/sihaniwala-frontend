@@ -394,7 +394,7 @@ export default function DonatePage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="bg-white rounded-lg p-3 border">
                       <p className="text-xs text-gray-400 uppercase font-medium">Bank Name</p>
-                      <p className="font-semibold text-[#0d2c54]">State Bank of India</p>
+                      <p className="font-semibold text-[#0d2c54]">Punjab National Bank</p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border">
                       <p className="text-xs text-gray-400 uppercase font-medium">Account Holder</p>
@@ -402,24 +402,24 @@ export default function DonatePage() {
                     </div>
                     <div className="bg-white rounded-lg p-3 border">
                       <p className="text-xs text-gray-400 uppercase font-medium">Account Number</p>
-                      <p className="font-semibold text-[#0d2c54] tracking-wider">39812345678901</p>
+                      <p className="font-semibold text-[#0d2c54] tracking-wider">7562002100001815</p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border">
                       <p className="text-xs text-gray-400 uppercase font-medium">IFSC Code</p>
-                      <p className="font-semibold text-[#0d2c54]">SBIN0012345</p>
+                      <p className="font-semibold text-[#0d2c54]">PUNB0021561</p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border">
                       <p className="text-xs text-gray-400 uppercase font-medium">Account Type</p>
-                      <p className="font-semibold text-[#0d2c54]">Current Account</p>
+                      <p className="font-semibold text-[#0d2c54]">Current Account — Noor Nagar Sihani Ghaziabad</p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border">
                       <p className="text-xs text-gray-400 uppercase font-medium">UPI ID</p>
-                      <p className="font-semibold text-[#0d2c54]">sihaniwala.foundation@sbi</p>
+                      <p className="font-semibold text-[#0d2c54]">informsfct@gmail.com</p>
                     </div>
                   </div>
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                     <p className="text-sm text-orange-700 font-medium">📱 After transfer, send screenshot to:</p>
-                    <p className="text-sm text-orange-800 font-semibold">WhatsApp: +91-9876543210 | Email: donate@sihaniwala.org</p>
+                    <p className="text-sm text-orange-800 font-semibold">WhatsApp: +91-8750970075 | Email: informsfct@gmail.com</p>
                   </div>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                     <p className="text-sm text-green-700">
