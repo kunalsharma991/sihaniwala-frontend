@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { UserCheck, Send, Heart, Users, Award, Clock, Shield, Sparkles } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { volunteerService } from '../services';
@@ -16,6 +17,7 @@ const whyVolunteer = [
 
 export default function VolunteerPage() {
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async (data) => {
@@ -23,6 +25,7 @@ export default function VolunteerPage() {
     try {
       await volunteerService.submit(data);
       toast.success('Volunteer application submitted! We will contact you soon.');
+      navigate('/volunteer-success', { state: data });
       reset();
     } catch {
       toast.error('Submission failed. Please try again.');

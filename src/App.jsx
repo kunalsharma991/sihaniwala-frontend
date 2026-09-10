@@ -19,6 +19,7 @@ import DonatePage from './pages/DonatePage';
 import NotFoundPage from './pages/NotFoundPage';
 import DonationSuccessPage from './pages/DonationSuccessPage';
 import DonationFailurePage from './pages/DonationFailurePage';
+import VolunteerSuccessPage from './pages/VolunteerSuccessPage';
 
 // Initiative Pages
 import HospitalPage from './pages/initiatives/HospitalPage';
@@ -80,6 +81,7 @@ function App() {
           {/* Donation result pages (standalone, no layout) */}
           <Route path="/donation-success" element={<DonationSuccessPage />} />
           <Route path="/donation-failure" element={<DonationFailurePage />} />
+          <Route path="/volunteer-success" element={<VolunteerSuccessPage />} />
 
           <Route path="/change-password" element={
             <ProtectedRoute>
