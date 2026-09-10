@@ -406,7 +406,7 @@ export default function DonatePage() {
                     </div>
                     <div className="bg-white rounded-lg p-3 border">
                       <p className="text-xs text-gray-400 uppercase font-medium">IFSC Code</p>
-                      <p className="font-semibold text-[#0d2c54]">PUNB0021561</p>
+                      <p className="font-semibold text-[#0d2c54]">PUNB0756200</p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border">
                       <p className="text-xs text-gray-400 uppercase font-medium">Account Type</p>
@@ -414,8 +414,18 @@ export default function DonatePage() {
                     </div>
                     <div className="bg-white rounded-lg p-3 border">
                       <p className="text-xs text-gray-400 uppercase font-medium">UPI ID</p>
-                      <p className="font-semibold text-[#0d2c54]">informsfct@gmail.com</p>
+                      <p className="font-semibold text-[#0d2c54]">8750970075m@pnb</p>
                     </div>
+                  </div>
+                  <div className="flex flex-col items-center bg-white border rounded-xl p-4 gap-2">
+                    <p className="text-sm font-semibold text-[#0d2c54]">Scan & Pay via UPI</p>
+                    <img
+                      src="https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=upi%3A%2F%2Fpay%3Fpa%3D8750970075m%40pnb%26pn%3DSihaniwala%2BFoundation%2BCharitable%2BTrust%26cu%3DINR"
+                      alt="UPI QR Code - Sihaniwala Foundation"
+                      className="w-48 h-48"
+                    />
+                    <p className="text-sm text-gray-600 font-medium">UPI ID: <span className="text-[#0d2c54] font-bold">8750970075m@pnb</span></p>
+                    <p className="text-xs text-gray-400">Merchant: Sihaniwala Foundation Charitable Trust</p>
                   </div>
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                     <p className="text-sm text-orange-700 font-medium">📱 After transfer, send screenshot to:</p>
