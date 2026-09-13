@@ -420,7 +420,7 @@ export default function DonatePage() {
                   <div className="flex flex-col items-center bg-white border rounded-xl p-4 gap-2">
                     <p className="text-sm font-semibold text-[#0d2c54]">Scan & Pay via UPI</p>
                     <img
-                      src="https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=upi%3A%2F%2Fpay%3Fpa%3D8750970075m%40pnb%26pn%3DSihaniwala%2BFoundation%2BCharitable%2BTrust%26cu%3DINR"
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('upi://pay?pa=8750970075m@pnb&pn=Sihaniwala Foundation Charitable Trust&cu=INR')}`}
                       alt="UPI QR Code - Sihaniwala Foundation"
                       className="w-48 h-48"
                     />
