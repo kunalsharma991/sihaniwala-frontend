@@ -1,59 +1,131 @@
-import { useState } from 'react';
-import { MessageSquare, Mail, Phone, Calendar, Eye } from 'lucide-react';
-
-const contacts = [
-  { id: 1, name: 'Vikram Patel', email: 'vikram@email.com', phone: '9876543210', subject: 'Donation Inquiry', message: 'I want to donate for the hospital initiative.', date: '2026-05-28', read: false },
-  { id: 2, name: 'Anita Rao', email: 'anita@email.com', phone: '9876543211', subject: 'Volunteer Interest', message: 'How can I become a volunteer?', date: '2026-05-27', read: true },
-  { id: 3, name: 'Suresh Kumar', email: 'suresh@email.com', phone: '9876543212', subject: 'Partnership', message: 'We want to partner with your foundation for CSR activities.', date: '2026-05-26', read: false },
-];
+import { useState, useEffect } from 'react';
+import { MessageSquare, Mail, Phone, Clock, Trash2, Eye } from 'lucide-react';
+import { adminService } from '../../services';
+import { toast } from 'react-toastify';
 
 export default function AdminContactsPage() {
+  const [contacts, setContacts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
 
+  useEffect(() => { fetchContacts(); }, []);
+
+  const fetchContacts = async () => {
+    try {
+      setLoading(true);
+      const res = await adminService.getContacts();
+      const data = res.data?.data || res.data || [];
+      setContacts(Array.isArray(data) ? data : []);
+    } catch {
+      toast.error('Failed to load contacts');
+      setContacts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this message?')) return;
+    try {
+      await adminService.deleteContact(id);
+      toast.success('Contact deleted');
+      if (selected?.id === id) setSelected(null);
+      fetchContacts();
+    } catch {
+      toast.error('Failed to delete');
+    }
+  };
+
+  const handleSelect = async (contact) => {
+    setSelected(contact);
+    if (!contact.read) {
+      try {
+        await adminService.markContactRead(contact.id);
+        setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, read: true } : c));
+      } catch {}
+    }
+  };
+
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0d2c54]"></div>
+    </div>
+  );
+
   return (
-    <div>
-      <div className="mb-8">
+    <div className="p-6">
+      <div className="mb-8 flex justify-between items-center">
+        <div>
         <h1 className="text-3xl font-bold text-[#0d2c54]">Contact Messages</h1>
-        <p className="text-gray-500">View and manage contact form submissions</p>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="space-y-3">
-          {contacts.map(c => (
-            <div key={c.id} onClick={() => setSelected(c)} className={`bg-white rounded-xl p-5 border cursor-pointer hover:shadow-lg transition ${!c.read ? 'border-l-4 border-l-orange-500' : ''} ${selected?.id === c.id ? 'ring-2 ring-orange-500' : ''}`}>
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-[#0d2c54]">{c.name}</h3>
-                <span className="text-xs text-gray-500">{c.date}</span>
-              </div>
-              <p className="text-sm text-gray-600 font-medium mt-1">{c.subject}</p>
-              <p className="text-sm text-gray-500 mt-1 truncate">{c.message}</p>
-            </div>
-          ))}
+          <p className="text-gray-500">View and manage contact form submissions ({contacts.length} total)</p>
         </div>
-
-        {selected ? (
-          <div className="bg-white rounded-2xl shadow-lg p-8 border h-fit">
-            <h2 className="text-xl font-bold text-[#0d2c54] mb-4">{selected.subject}</h2>
-            <div className="space-y-3 text-sm text-gray-600 mb-6">
-              <p className="flex items-center gap-2"><MessageSquare size={14} /> {selected.name}</p>
-              <p className="flex items-center gap-2"><Mail size={14} /> {selected.email}</p>
-              <p className="flex items-center gap-2"><Phone size={14} /> {selected.phone}</p>
-              <p className="flex items-center gap-2"><Calendar size={14} /> {selected.date}</p>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-gray-700">{selected.message}</p>
-            </div>
-            <button className="mt-4 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-xl font-semibold hover:shadow-lg transition">
-              Reply via Email
-            </button>
-          </div>
-        ) : (
-          <div className="bg-gray-50 rounded-2xl p-12 text-center border-2 border-dashed">
-            <Eye size={40} className="mx-auto text-gray-300 mb-4" />
-            <p className="text-gray-400">Select a message to view details</p>
-          </div>
-        )}
+        <button onClick={fetchContacts} className="px-4 py-2 bg-[#0d2c54] text-white rounded-xl hover:bg-[#1a4a7a] transition text-sm">
+          Refresh
+        </button>
       </div>
+      {contacts.length === 0 ? (
+        <div className="text-center py-16 text-gray-400">
+          <MessageSquare size={48} className="mx-auto mb-4 opacity-30" />
+          <p className="text-lg">No contact messages yet</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            {contacts.map(c => (
+              <div key={c.id} onClick={() => handleSelect(c)}
+                className={`bg-white rounded-xl p-4 shadow cursor-pointer border-2 transition ${selected?.id === c.id ? 'border-orange-400' : 'border-transparent hover:border-gray-200'} ${!c.read ? 'border-l-4 border-l-orange-400' : ''}`}>
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-[#0d2c54]">{c.name || 'Unknown'}</h3>
+                      {!c.read && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">New</span>}
+                    </div>
+                    <p className="text-sm text-gray-500">{c.subject || 'No subject'}</p>
+                    <p className="text-sm text-gray-400 truncate mt-1">{c.message}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 ml-3">
+                    <span className="text-xs text-gray-400">{c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN') : ''}</span>
+                    <button onClick={e => { e.stopPropagation(); handleDelete(c.id); }} className="p-1 text-red-400 hover:bg-red-50 rounded">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="bg-white rounded-xl shadow p-6">
+            {selected ? (
+              <div>
+                <h2 className="font-bold text-[#0d2c54] text-lg mb-4">{selected.subject || 'Message Details'}</h2>
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center gap-2 text-sm"><Eye size={14} className="text-gray-400" /><span className="font-medium">{selected.name}</span></div>
+                  {selected.email && <div className="flex items-center gap-2 text-sm"><Mail size={14} className="text-gray-400" />{selected.email}</div>}
+                  {selected.phone && <div className="flex items-center gap-2 text-sm"><Phone size={14} className="text-gray-400" />{selected.phone}</div>}
+                  {selected.createdAt && <div className="flex items-center gap-2 text-sm text-gray-400"><Clock size={14} />{new Date(selected.createdAt).toLocaleString('en-IN')}</div>}
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-700 leading-relaxed">{selected.message}</p>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  {selected.email && (
+                    <a href={`mailto:${selected.email}?subject=Re: ${selected.subject || ''}`} className="flex-1 text-center py-2 bg-[#0d2c54] text-white rounded-xl text-sm hover:bg-[#1a4a7a] transition">
+                      Reply via Email
+                    </a>
+                  )}
+                  <button onClick={() => handleDelete(selected.id)} className="px-4 py-2 border border-red-300 text-red-500 rounded-xl text-sm hover:bg-red-50 transition">
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                <Eye size={32} className="mb-3 opacity-30" />
+                <p>Select a message to view details</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
