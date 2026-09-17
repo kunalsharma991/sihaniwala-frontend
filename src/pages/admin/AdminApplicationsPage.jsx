@@ -1,8 +1,39 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Search, X } from 'lucide-react';
 import { adminService } from '../../services';
 import { toast } from 'react-toastify';
+
+const formatLabel = (key) => key
+  .replace(/([A-Z])/g, ' $1')
+  .replace(/^./, character => character.toUpperCase());
+
+const formatValue = (value) => {
+  if (value === null || value === undefined || value === '') return 'Not provided';
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (typeof value === 'object') return JSON.stringify(value, null, 2);
+  return String(value);
+};
+
+const parseFormData = (rawFormData) => {
+  if (rawFormData === null || rawFormData === undefined || rawFormData === '') {
+    return { details: null, error: false };
+  }
+
+  if (typeof rawFormData === 'object') {
+    return { details: rawFormData, error: false };
+  }
+
+  if (typeof rawFormData !== 'string') {
+    return { details: null, error: true };
+  }
+
+  try {
+    return { details: JSON.parse(rawFormData), error: false };
+  } catch {
+    return { details: null, error: true };
+  }
+};
 
 export default function AdminApplicationsPage() {
   const [applications, setApplications] = useState([]);
@@ -10,8 +41,7 @@ export default function AdminApplicationsPage() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [updating, setUpdating] = useState(null);
-
-  useEffect(() => { fetchApplications(); }, []);
+  const [selectedApplication, setSelectedApplication] = useState(null);
 
   const fetchApplications = async () => {
     try {
@@ -19,7 +49,7 @@ export default function AdminApplicationsPage() {
       const res = await adminService.getApplications();
       const data = res.data?.data || res.data || [];
       setApplications(Array.isArray(data) ? data : []);
-    } catch (err) {
+    } catch {
       toast.error('Failed to load applications');
       setApplications([]);
     } finally {
@@ -32,12 +62,25 @@ export default function AdminApplicationsPage() {
     try {
       await adminService.updateApplicationStatus(id, status);
       setApplications(apps => apps.map(a => a.id === id ? { ...a, status } : a));
+      setSelectedApplication(selected => selected?.application.id === id
+        ? { ...selected, application: { ...selected.application, status } }
+        : selected);
       toast.success(`Application ${status.toLowerCase()} successfully`);
-    } catch (err) {
+    } catch {
       toast.error('Failed to update status');
     } finally {
       setUpdating(null);
     }
+  };
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(fetchApplications, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  const openApplicationDetails = (application) => {
+    const { details: formDetails, error: formDataError } = parseFormData(application.formData);
+    setSelectedApplication({ application, formDetails, formDataError });
   };
 
   const filtered = applications
@@ -157,12 +200,20 @@ export default function AdminApplicationsPage() {
                 )}
                 {app.status === 'PENDING' && (
                   <button
-                    onClick={() => handleStatusUpdate(app.id, 'UNDER_REVIEW')}
-                    disabled={updating === app.id + 'UNDER_REVIEW'}
+                    onClick={() => openApplicationDetails(app)}
                     className="flex items-center gap-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 text-sm transition"
                   >
-                    <Clock size={15} />
-                    {updating === app.id + 'UNDER_REVIEW' ? '...' : 'Review'}
+                    <FileText size={15} />
+                    Review
+                  </button>
+                )}
+                {app.status !== 'PENDING' && (
+                  <button
+                    onClick={() => openApplicationDetails(app)}
+                    className="flex items-center gap-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm transition"
+                  >
+                    <FileText size={15} />
+                    Details
                   </button>
                 )}
               </div>
@@ -170,6 +221,92 @@ export default function AdminApplicationsPage() {
           ))}
         </div>
       )}
+
+      {selectedApplication && (() => {
+        const { application, formDetails, formDataError } = selectedApplication;
+        const detailEntries = formDetails && typeof formDetails === 'object' && !Array.isArray(formDetails)
+          ? Object.entries(formDetails)
+          : [];
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="presentation" onClick={() => setSelectedApplication(null)}>
+            <div
+              className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="application-details-title"
+              onClick={event => event.stopPropagation()}
+            >
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div>
+                  <h2 id="application-details-title" className="text-2xl font-bold text-[#0d2c54]">Application Details</h2>
+                  <p className="mt-1 text-sm text-gray-500">Application #{application.id}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedApplication(null)}
+                  className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                  aria-label="Close application details"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="grid gap-4 rounded-xl border bg-gray-50 p-4 sm:grid-cols-2">
+                <div><dt className="text-xs font-semibold uppercase text-gray-500">Application ID</dt><dd className="mt-1 break-words text-gray-800">{application.id}</dd></div>
+                <div><dt className="text-xs font-semibold uppercase text-gray-500">Initiative Type</dt><dd className="mt-1 break-words text-gray-800">{application.initiativeType || 'Not provided'}</dd></div>
+                <div><dt className="text-xs font-semibold uppercase text-gray-500">Status</dt><dd className="mt-1 break-words text-gray-800">{application.status || 'Not provided'}</dd></div>
+                <div><dt className="text-xs font-semibold uppercase text-gray-500">Created At</dt><dd className="mt-1 break-words text-gray-800">{application.createdAt ? new Date(application.createdAt).toLocaleString('en-IN') : 'Not provided'}</dd></div>
+                <div><dt className="text-xs font-semibold uppercase text-gray-500">Updated At</dt><dd className="mt-1 break-words text-gray-800">{application.updatedAt ? new Date(application.updatedAt).toLocaleString('en-IN') : 'Not provided'}</dd></div>
+              </div>
+
+              <div className="mt-6">
+                <h3 className="mb-3 text-lg font-semibold text-[#0d2c54]">Submitted Information</h3>
+                {formDataError ? (
+                  <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">The submitted form information could not be read.</p>
+                ) : detailEntries.length === 0 ? (
+                  <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Detailed form information was not stored for this application.</p>
+                ) : (
+                  <dl className="divide-y rounded-xl border">
+                    {detailEntries.map(([key, value]) => (
+                      <div key={key} className="grid gap-1 p-4 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] sm:gap-4">
+                        <dt className="font-semibold text-gray-600">{formatLabel(key)}</dt>
+                        <dd className="break-words text-gray-800">{formatValue(value)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </div>
+
+              <div className="mt-6 flex flex-wrap justify-end gap-2">
+                {application.status !== 'APPROVED' && (
+                  <button
+                    type="button"
+                    onClick={() => handleStatusUpdate(application.id, 'APPROVED')}
+                    disabled={updating === application.id + 'APPROVED'}
+                    className="flex items-center gap-1 rounded-lg bg-green-500 px-3 py-2 text-sm text-white hover:bg-green-600 disabled:opacity-50"
+                  >
+                    <CheckCircle size={15} />
+                    {updating === application.id + 'APPROVED' ? '...' : 'Approve'}
+                  </button>
+                )}
+                {application.status !== 'REJECTED' && (
+                  <button
+                    type="button"
+                    onClick={() => handleStatusUpdate(application.id, 'REJECTED')}
+                    disabled={updating === application.id + 'REJECTED'}
+                    className="flex items-center gap-1 rounded-lg bg-red-500 px-3 py-2 text-sm text-white hover:bg-red-600 disabled:opacity-50"
+                  >
+                    <XCircle size={15} />
+                    {updating === application.id + 'REJECTED' ? '...' : 'Reject'}
+                  </button>
+                )}
+                <button type="button" onClick={() => setSelectedApplication(null)} className="rounded-lg border px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Close</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

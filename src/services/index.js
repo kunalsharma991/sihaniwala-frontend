@@ -17,12 +17,12 @@ export const donationService = {
 };
 
 export const initiativeService = {
-  submitHospital: (data) => api.post('/api/initiatives/hospital', data),
-  submitMarriage: (data) => api.post('/api/initiatives/marriage-support', data),
-  submitEducation: (data) => api.post('/api/initiatives/education-bpl', data),
-  submitFinancial: (data) => api.post('/api/initiatives/financial-help', data),
-  submitWaterSpray: (data) => api.post('/api/initiatives/water-spray', data),
-  submitSchoolAdoption: (data) => api.post('/api/initiatives/school-adoption', data),
+  submitHospital: (data) => api.post('/api/initiatives/hospital', { formData: JSON.stringify(data) }),
+  submitMarriage: (data) => api.post('/api/initiatives/marriage-support', { formData: JSON.stringify(data) }),
+  submitEducation: (data) => api.post('/api/initiatives/education-bpl', { formData: JSON.stringify(data) }),
+  submitFinancial: (data) => api.post('/api/initiatives/financial-help', { formData: JSON.stringify(data) }),
+  submitWaterSpray: (data) => api.post('/api/initiatives/water-spray', { formData: JSON.stringify(data) }),
+  submitSchoolAdoption: (data) => api.post('/api/initiatives/school-adoption', { formData: JSON.stringify(data) }),
 };
 
 export const adminService = {
