@@ -25,6 +25,10 @@ export const initiativeService = {
   submitSchoolAdoption: (data) => api.post('/api/initiatives/school-adoption', { formData: JSON.stringify(data) }),
 };
 
+export const galleryService = {
+  getGallery: () => api.get('/api/gallery'),
+};
+
 export const adminService = {
   getDashboard: () => api.get('/api/admin/dashboard'),
   getApplications: (params) => api.get('/api/admin/applications', params ? { params } : {}),

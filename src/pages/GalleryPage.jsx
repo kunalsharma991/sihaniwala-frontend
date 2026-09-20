@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ZoomIn, Camera } from 'lucide-react';
+import { galleryService } from '../services';
+import { normalizeGalleryRecords } from '../utils/gallery';
 import hospitalImg from '../assets/images/hospital.jpg';
 import marriageImg from '../assets/images/marriage.jpg';
 import waterImg from '../assets/images/water.jpg';
@@ -27,10 +29,33 @@ const galleryImages = [
 const categories = ['All', 'Healthcare', 'Education', 'Support', 'Community', 'Events'];
 
 export default function GalleryPage() {
+  const [gallery, setGallery] = useState(galleryImages);
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState('All');
 
-  const filtered = filter === 'All' ? galleryImages : galleryImages.filter((img) => img.category === filter);
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        const res = await galleryService.getGallery();
+        const records = normalizeGalleryRecords(res.data?.data || res.data);
+        if (records.length > 0) setGallery(records);
+      } catch {
+        // Keep the bundled gallery visible when the API is unavailable.
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGallery();
+  }, []);
+
+  const categoriesWithRecords = gallery
+    .map((image) => image.category)
+    .filter((category, index, allCategories) => category && allCategories.indexOf(category) === index);
+  const availableCategories = ['All', ...categories.filter((category) => categoriesWithRecords.includes(category)),
+    ...categoriesWithRecords.filter((category) => !categories.includes(category))];
+  const filtered = filter === 'All' ? gallery : gallery.filter((img) => img.category === filter);
 
   return (
     <div>
@@ -52,7 +77,7 @@ export default function GalleryPage() {
         <div className="max-w-6xl mx-auto">
           {/* Filters */}
           <div className="flex flex-wrap justify-center gap-3 mb-12">
-            {categories.map((cat) => (
+            {availableCategories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
@@ -68,6 +93,11 @@ export default function GalleryPage() {
           </div>
 
           {/* Masonry Grid */}
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0d2c54]" />
+            </div>
+          ) : (
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -97,6 +127,7 @@ export default function GalleryPage() {
               </motion.div>
             ))}
           </motion.div>
+          )}
         </div>
       </section>
 

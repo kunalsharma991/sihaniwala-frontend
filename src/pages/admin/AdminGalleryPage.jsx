@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Image, Upload, Trash2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Upload, Trash2 } from 'lucide-react';
 import { adminService } from '../../services';
+import { normalizeGalleryRecords } from '../../utils/gallery';
 import { toast } from 'react-toastify';
 import hospitalImg from '../../assets/images/hospital.jpg';
 import marriageImg from '../../assets/images/marriage.jpg';
@@ -20,7 +21,27 @@ const mockGallery = [
 
 export default function AdminGalleryPage() {
   const [gallery, setGallery] = useState(mockGallery);
+  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+
+  const fetchGallery = async () => {
+    try {
+      setLoading(true);
+      const res = await adminService.getGallery();
+      const records = normalizeGalleryRecords(res.data?.data || res.data);
+      setGallery(records.length > 0 ? records : mockGallery);
+    } catch {
+      setGallery(mockGallery);
+      toast.error('Failed to load gallery');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(fetchGallery, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
@@ -30,6 +51,7 @@ export default function AdminGalleryPage() {
       const formData = new FormData();
       formData.append('file', file);
       await adminService.uploadGallery(formData);
+      await fetchGallery();
       toast.success('Image uploaded successfully');
     } catch {
       toast.error('Upload failed');
@@ -41,7 +63,7 @@ export default function AdminGalleryPage() {
   const handleDelete = async (id) => {
     try {
       await adminService.deleteGalleryItem(id);
-      setGallery(gallery.filter(g => g.id !== id));
+      await fetchGallery();
       toast.success('Image deleted');
     } catch {
       toast.error('Delete failed');
@@ -61,6 +83,11 @@ export default function AdminGalleryPage() {
         </label>
       </div>
 
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0d2c54]" />
+        </div>
+      ) : (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {gallery.map(item => (
           <div key={item.id} className="relative group rounded-xl overflow-hidden aspect-square bg-gray-100">
@@ -76,6 +103,7 @@ export default function AdminGalleryPage() {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }
