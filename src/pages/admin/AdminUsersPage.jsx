@@ -1,15 +1,58 @@
-import { Users, Shield, Mail, Calendar, Search } from 'lucide-react';
-import { useState } from 'react';
-
-const users = [
-  { id: 1, name: 'Amit Sharma', email: 'amit@email.com', role: 'USER', joined: '2026-01-15', status: 'Active' },
-  { id: 2, name: 'Admin User', email: 'admin@sihaniwala.org', role: 'ADMIN', joined: '2025-01-01', status: 'Active' },
-  { id: 3, name: 'Priya Singh', email: 'priya@email.com', role: 'USER', joined: '2026-03-20', status: 'Active' },
-  { id: 4, name: 'Rajesh Gupta', email: 'rajesh@email.com', role: 'USER', joined: '2026-04-10', status: 'Active' },
-];
+import { Users, Shield, Search, Trash2, Power } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { adminService } from '../../services';
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-toastify';
 
 export default function AdminUsersPage() {
   const [search, setSearch] = useState('');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user: currentUser } = useAuth();
+
+  useEffect(() => {
+    let active = true;
+    const loadUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await adminService.getUsers();
+        const data = response.data?.data || response.data || [];
+        if (active) setUsers(Array.isArray(data) ? data : []);
+      } catch (error) {
+        if (active) {
+          toast.error(error.response?.data?.message || 'Failed to load users');
+          setUsers([]);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    loadUsers();
+    return () => { active = false; };
+  }, []);
+
+  const handleToggle = async (id) => {
+    try {
+      const response = await adminService.toggleUserStatus(id);
+      const updatedUser = response.data?.data;
+      setUsers(prev => prev.map(item => item.id === id ? (updatedUser || { ...item, enabled: !item.enabled }) : item));
+      toast.success('User status updated');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update user status');
+    }
+  };
+
+  const handleDelete = async (targetUser) => {
+    if (!window.confirm(`Delete ${targetUser.name || 'this user'}? This cannot be undone.`)) return;
+    try {
+      await adminService.deleteUser(targetUser.id);
+      setUsers(prev => prev.filter(item => item.id !== targetUser.id));
+      toast.success('User deleted');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete user');
+    }
+  };
+
   const filtered = users.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()));
 
   return (
@@ -34,13 +77,20 @@ export default function AdminUsersPage() {
                 <th className="px-6 py-4 text-left text-sm font-semibold">Role</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold">Joined</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map(u => (
+              {loading ? (
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400">Loading users...</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400">No users found</td></tr>
+              ) : filtered.map(u => {
+                const isCurrentUser = currentUser?.email?.toLowerCase() === u.email?.toLowerCase();
+                return (
                 <tr key={u.id} className="border-b hover:bg-gray-50 transition">
                   <td className="px-6 py-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#0d2c54] flex items-center justify-center text-white font-bold">{u.name.charAt(0)}</div>
+                    <div className="w-10 h-10 rounded-full bg-[#0d2c54] flex items-center justify-center text-white font-bold">{(u.name || 'U').charAt(0)}</div>
                     {u.name}
                   </td>
                   <td className="px-6 py-4">{u.email}</td>
@@ -50,12 +100,20 @@ export default function AdminUsersPage() {
                       {u.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4">{u.joined}</td>
+                  <td className="px-6 py-4">{u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN') : '-'}</td>
                   <td className="px-6 py-4">
-                    <span className="text-xs font-semibold px-3 py-1 rounded-full bg-green-100 text-green-700">{u.status}</span>
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${u.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{u.enabled ? 'Active' : 'Disabled'}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      {!isCurrentUser && <button onClick={() => handleToggle(u.id)} className="p-2 text-[#0d2c54] hover:bg-blue-50 rounded-lg" title={u.enabled ? 'Disable user' : 'Enable user'}><Power size={16} /></button>}
+                      {!isCurrentUser && <button onClick={() => handleDelete(u)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Delete user"><Trash2 size={16} /></button>}
+                      {isCurrentUser && <span className="text-xs text-gray-400">Current admin</span>}
+                    </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

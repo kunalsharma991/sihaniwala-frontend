@@ -7,8 +7,6 @@ export default function AdminVolunteersPage() {
   const [volunteers, setVolunteers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchVolunteers(); }, []);
-
   const fetchVolunteers = async () => {
     try {
       setLoading(true);
@@ -22,6 +20,11 @@ export default function AdminVolunteersPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const loadVolunteers = async () => { await fetchVolunteers(); };
+    loadVolunteers();
+  }, []);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Remove this volunteer?')) return;

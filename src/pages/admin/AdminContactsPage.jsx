@@ -8,8 +8,6 @@ export default function AdminContactsPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
 
-  useEffect(() => { fetchContacts(); }, []);
-
   const fetchContacts = async () => {
     try {
       setLoading(true);
@@ -23,6 +21,11 @@ export default function AdminContactsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const loadContacts = async () => { await fetchContacts(); };
+    loadContacts();
+  }, []);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this message?')) return;
@@ -42,7 +45,7 @@ export default function AdminContactsPage() {
       try {
         await adminService.markContactRead(contact.id);
         setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, read: true } : c));
-      } catch {}
+      } catch { return; }
     }
   };
 

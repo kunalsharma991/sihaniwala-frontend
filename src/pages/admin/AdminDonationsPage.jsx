@@ -1,15 +1,13 @@
-import { CreditCard, Calendar, Search, Globe, IndianRupee } from 'lucide-react';
+import { CreditCard, Calendar, Search, Globe, IndianRupee, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { adminService } from '../../services';
+import { toast } from 'react-toastify';
 
 export default function AdminDonationsPage() {
   const [search, setSearch] = useState('');
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchDonations();
-  }, []);
+  const [deletingId, setDeletingId] = useState(null);
 
   const fetchDonations = async () => {
     try {
@@ -19,6 +17,29 @@ export default function AdminDonationsPage() {
       console.error('Failed to fetch donations:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadDonations = async () => { await fetchDonations(); };
+    loadDonations();
+  }, []);
+
+  const handleDelete = async (donation) => {
+    const confirmed = window.confirm(
+      'This deletes only the local donation record. It does not refund or cancel the Razorpay/PayPal payment. Continue?'
+    );
+    if (!confirmed) return;
+    if (deletingId === donation.id) return;
+    setDeletingId(donation.id);
+    try {
+      await adminService.deleteDonation(donation.id);
+      await fetchDonations();
+      toast.success('Local donation record deleted');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete donation record');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -85,13 +106,14 @@ export default function AdminDonationsPage() {
                 <th className="px-6 py-4 text-left text-sm font-semibold">Gateway</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold">Date</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-400">Loading donations...</td></tr>
+                <tr><td colSpan={8} className="px-6 py-12 text-center text-gray-400">Loading donations...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-400">No donations found</td></tr>
+                <tr><td colSpan={8} className="px-6 py-12 text-center text-gray-400">No donations found</td></tr>
               ) : (
                 filtered.map(d => (
                   <tr key={d.id} className="border-b hover:bg-gray-50 transition">
@@ -110,6 +132,12 @@ export default function AdminDonationsPage() {
                     <td className="px-6 py-4 text-sm text-gray-600">{d.createdAt ? new Date(d.createdAt).toLocaleDateString() : '-'}</td>
                     <td className="px-6 py-4">
                       <span className={`text-xs font-semibold px-3 py-1 rounded-full ${statusColor(d.status)}`}>{d.status}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button onClick={() => handleDelete(d)} disabled={deletingId === d.id} className="flex items-center gap-1 px-2 py-1 text-xs text-red-500 hover:bg-red-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" title="Delete local test record">
+                        <Trash2 size={16} />
+                        {deletingId === d.id ? 'Deleting...' : 'Delete local record'}
+                      </button>
                     </td>
                   </tr>
                 ))
