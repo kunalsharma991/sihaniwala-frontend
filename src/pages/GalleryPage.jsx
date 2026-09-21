@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ZoomIn, Camera } from 'lucide-react';
 import { galleryService } from '../services';
-import { normalizeGalleryRecords } from '../utils/gallery';
+import { galleryCategories, getGalleryCategoryLabel, normalizeGalleryRecords } from '../utils/gallery';
 import hospitalImg from '../assets/images/hospital.jpg';
 import marriageImg from '../assets/images/marriage.jpg';
 import waterImg from '../assets/images/water.jpg';
@@ -16,17 +16,17 @@ const fadeInUp = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, t
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
 
 const galleryImages = [
-  { id: 1, src: hospitalImg, title: 'Hospital Assistance', category: 'Healthcare', tall: true },
-  { id: 2, src: marriageImg, title: 'Marriage Support', category: 'Support' },
-  { id: 3, src: waterImg, title: 'Water Spray Truck', category: 'Community' },
-  { id: 4, src: educationImg, title: 'Education Program', category: 'Education', tall: true },
-  { id: 5, src: financialImg, title: 'Financial Help', category: 'Support' },
-  { id: 6, src: schoolImg, title: 'School Adoption', category: 'Education' },
-  { id: 7, src: heroBgImg, title: 'Community Event', category: 'Events' },
-  { id: 8, src: founderImg, title: 'Foundation Day', category: 'Events', tall: true },
+  { id: 1, src: hospitalImg, title: 'Healthcare Assistance', category: 'healthcare_assistance', tall: true },
+  { id: 2, src: marriageImg, title: 'Marriage Support', category: 'marriage_support' },
+  { id: 3, src: waterImg, title: 'Water & Community Support', category: 'water_community_support' },
+  { id: 4, src: educationImg, title: 'Education & Support', category: 'education_support', tall: true },
+  { id: 5, src: financialImg, title: 'Community Outreach', category: 'community_outreach' },
+  { id: 6, src: schoolImg, title: 'Education Activity', category: 'education_support' },
+  { id: 7, src: heroBgImg, title: 'Community Outreach Event', category: 'community_outreach' },
+  { id: 8, src: founderImg, title: 'Foundation Community Event', category: 'other', tall: true },
 ];
 
-const categories = ['All', 'Healthcare', 'Education', 'Support', 'Community', 'Events'];
+const categories = galleryCategories.map((category) => category.value);
 
 export default function GalleryPage() {
   const [gallery, setGallery] = useState(galleryImages);
@@ -53,7 +53,7 @@ export default function GalleryPage() {
   const categoriesWithRecords = gallery
     .map((image) => image.category)
     .filter((category, index, allCategories) => category && allCategories.indexOf(category) === index);
-  const availableCategories = ['All', ...categories.filter((category) => categoriesWithRecords.includes(category)),
+  const availableCategories = ['All', ...categories,
     ...categoriesWithRecords.filter((category) => !categories.includes(category))];
   const filtered = filter === 'All' ? gallery : gallery.filter((img) => img.category === filter);
 
@@ -87,7 +87,7 @@ export default function GalleryPage() {
                     : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                 }`}
               >
-                {cat}
+                {cat === 'All' ? 'All' : getGalleryCategoryLabel(cat)}
               </button>
             ))}
           </div>
@@ -119,7 +119,8 @@ export default function GalleryPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4">
                   <p className="text-white font-bold text-sm">{img.title}</p>
-                  <p className="text-orange-400 text-xs mt-0.5">{img.category}</p>
+                  <p className="text-orange-400 text-xs mt-0.5">{img.categoryLabel || getGalleryCategoryLabel(img.category)}</p>
+                  {img.description && <p className="text-white/80 text-xs mt-1 line-clamp-2">{img.description}</p>}
                 </div>
                 <div className="absolute top-3 right-3 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg">
                   <ZoomIn size={16} className="text-[#0d2c54]" />
@@ -159,7 +160,8 @@ export default function GalleryPage() {
               />
               <div className="mt-4 text-center">
                 <p className="text-white text-lg font-bold">{selected.title}</p>
-                <p className="text-orange-400 text-sm">{selected.category}</p>
+                <p className="text-orange-400 text-sm">{selected.categoryLabel || getGalleryCategoryLabel(selected.category)}</p>
+                {selected.description && <p className="text-white/80 text-sm mt-1">{selected.description}</p>}
               </div>
             </motion.div>
           </motion.div>

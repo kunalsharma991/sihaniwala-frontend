@@ -35,6 +35,7 @@ export const adminService = {
   updateApplicationStatus: (id, status) => api.put(`/api/admin/applications/${id}/status`, { status }),
   getGallery: () => api.get('/api/admin/gallery'),
   deleteGalleryItem: (id) => api.delete(`/api/admin/gallery/${id}`),
+  updateGallery: (id, formData) => api.put(`/api/admin/gallery/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   uploadGallery: (formData) => api.post('/api/admin/gallery', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   getVolunteers: () => api.get('/api/admin/volunteers'),
   getContacts: () => api.get('/api/admin/contacts'),
