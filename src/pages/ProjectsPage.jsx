@@ -1,25 +1,54 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Users, ArrowRight, CheckCircle, Clock, ArrowUpCircle } from 'lucide-react';
+import { Calendar, MapPin, Users, CheckCircle, Clock, AlertCircle, RefreshCw } from 'lucide-react';
+import { projectService } from '../services';
 
 const fadeInUp = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } };
 
-const projects = [
-  { title: 'Free Health Camp', location: 'Ghaziabad, UP', date: 'March 2026', beneficiaries: '200+', status: 'Completed', progress: 100, desc: 'Organized a free health checkup camp providing medical consultations and medicines to underprivileged families.' },
-  { title: 'School Renovation Drive', location: 'Noida, UP', date: 'January 2026', beneficiaries: '500+', status: 'Completed', progress: 100, desc: 'Renovated a government school including new classrooms, furniture, and a library for students.' },
-  { title: 'Winter Relief Campaign', location: 'Delhi NCR', date: 'December 2025', beneficiaries: '1000+', status: 'Completed', progress: 100, desc: 'Distributed blankets, warm clothes, and food packets to homeless individuals during winter.' },
-  { title: 'Clean Water Initiative', location: 'Raj Nagar', date: 'Ongoing', beneficiaries: '300+', status: 'Ongoing', progress: 65, desc: 'Installing water purification systems in communities lacking access to clean drinking water.' },
-  { title: 'Women Empowerment Workshop', location: 'Ghaziabad, UP', date: 'Upcoming', beneficiaries: '150+', status: 'Upcoming', progress: 20, desc: 'Skill development and self-defense workshops for women from underprivileged backgrounds.' },
-  { title: 'Tree Plantation Drive', location: 'Delhi NCR', date: 'Upcoming', beneficiaries: 'All', status: 'Upcoming', progress: 10, desc: 'Planting 1000+ trees across Delhi NCR to contribute to environmental conservation.' },
-];
-
+// Status styling keyed on the values the admin project form actually stores
+// (ACTIVE / COMPLETED / PENDING), with a neutral fallback for any legacy value.
 const statusConfig = {
-  Completed: { color: 'bg-green-100 text-green-700 border-green-200', icon: CheckCircle, barColor: 'bg-green-500' },
-  Ongoing: { color: 'bg-blue-100 text-blue-700 border-blue-200', icon: Clock, barColor: 'bg-blue-500' },
-  Upcoming: { color: 'bg-amber-100 text-amber-700 border-amber-200', icon: ArrowUpCircle, barColor: 'bg-amber-500' },
+  ACTIVE: { label: 'Active', color: 'bg-green-100 text-green-700 border-green-200', icon: CheckCircle },
+  COMPLETED: { label: 'Completed', color: 'bg-blue-100 text-blue-700 border-blue-200', icon: CheckCircle },
+  PENDING: { label: 'Pending', color: 'bg-amber-100 text-amber-700 border-amber-200', icon: Clock },
+};
+const fallbackStatus = { label: 'Update', color: 'bg-gray-100 text-gray-700 border-gray-200', icon: Clock };
+
+const formatStatus = (status) => {
+  const key = String(status || '').trim().toUpperCase();
+  return statusConfig[key] || fallbackStatus;
+};
+
+const formatDate = (value) => {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
 };
 
 export default function ProjectsPage() {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await projectService.getProjects();
+      setProjects(Array.isArray(res.data?.data) ? res.data.data : []);
+    } catch {
+      setError('Unable to load projects. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(fetchProjects, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
   return (
     <div>
       {/* Hero */}
@@ -37,48 +66,60 @@ export default function ProjectsPage() {
 
       {/* Projects Grid */}
       <section className="py-20 px-6 bg-gray-50">
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((p) => {
-            const config = statusConfig[p.status];
-            const StatusIcon = config.icon;
-            return (
-              <motion.div key={p.title} variants={fadeInUp} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group">
-                {/* Card Header */}
-                <div className="bg-gradient-to-br from-[#0d2c54] to-blue-800 p-6 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-                  <div className="flex justify-between items-start relative z-10">
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border ${config.color}`}>
-                      <StatusIcon size={12} /> {p.status}
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-white mt-4 relative z-10">{p.title}</h3>
-                </div>
-
-                {/* Card Body */}
-                <div className="p-6">
-                  <p className="text-gray-600 text-sm leading-relaxed">{p.desc}</p>
-
-                  <div className="mt-5 space-y-2 text-sm text-gray-500">
-                    <div className="flex items-center gap-2"><MapPin size={14} className="text-orange-500" /> {p.location}</div>
-                    <div className="flex items-center gap-2"><Calendar size={14} className="text-orange-500" /> {p.date}</div>
-                    <div className="flex items-center gap-2"><Users size={14} className="text-orange-500" /> {p.beneficiaries} Beneficiaries</div>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="mt-5">
-                    <div className="flex justify-between text-xs font-semibold mb-1.5">
-                      <span className="text-gray-500">Progress</span>
-                      <span className="text-[#0d2c54]">{p.progress}%</span>
+        <div className="max-w-6xl mx-auto">
+          {loading ? (
+            <div className="flex justify-center items-center h-64" role="status" aria-live="polite">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0d2c54]" />
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center text-center py-16">
+              <AlertCircle size={40} className="text-red-400 mb-3" />
+              <p className="text-gray-600 font-medium">{error}</p>
+              <button onClick={fetchProjects} className="mt-4 inline-flex items-center gap-2 bg-[#0d2c54] text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-[#1a4a7a] transition">
+                <RefreshCw size={16} /> Retry
+              </button>
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center py-16 text-gray-500">
+              <Users size={40} className="text-gray-300 mb-3" />
+              <p className="font-medium">There are no projects to show right now.</p>
+              <p className="text-sm mt-1">Please check back soon.</p>
+            </div>
+          ) : (
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {projects.map((p) => {
+                const config = formatStatus(p.status);
+                const StatusIcon = config.icon;
+                const date = formatDate(p.createdAt || p.updatedAt);
+                return (
+                  <motion.div key={p.id} variants={fadeInUp} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group">
+                    {/* Card Header */}
+                    <div className="bg-gradient-to-br from-[#0d2c54] to-blue-800 p-6 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                      <div className="flex justify-between items-start relative z-10">
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border ${config.color}`}>
+                          <StatusIcon size={12} /> {config.label}
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-bold text-white mt-4 relative z-10">{p.title}</h3>
                     </div>
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full ${config.barColor} rounded-full transition-all duration-1000`} style={{ width: `${p.progress}%` }} />
+
+                    {/* Card Body */}
+                    <div className="p-6">
+                      {p.description && <p className="text-gray-600 text-sm leading-relaxed">{p.description}</p>}
+
+                      <div className="mt-5 space-y-2 text-sm text-gray-500">
+                        {p.location && <div className="flex items-center gap-2"><MapPin size={14} className="text-orange-500" /> {p.location}</div>}
+                        {date && <div className="flex items-center gap-2"><Calendar size={14} className="text-orange-500" /> {date}</div>}
+                        {p.beneficiaries && <div className="flex items-center gap-2"><Users size={14} className="text-orange-500" /> {p.beneficiaries} Beneficiaries</div>}
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
+        </div>
       </section>
     </div>
   );

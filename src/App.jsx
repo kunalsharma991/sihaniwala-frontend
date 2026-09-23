@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { MotionConfig } from 'framer-motion';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './context/AuthContext';
@@ -53,7 +54,8 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
+    <MotionConfig reducedMotion="user">
+      <AuthProvider>
       <Router>
         <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover />
         <Routes>
@@ -109,7 +111,8 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </MotionConfig>
   );
 }
 

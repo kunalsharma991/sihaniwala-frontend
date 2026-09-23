@@ -1,54 +1,54 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ZoomIn, Camera } from 'lucide-react';
+import { X, ZoomIn, Camera, AlertCircle, RefreshCw, ImageOff } from 'lucide-react';
 import { galleryService } from '../services';
 import { galleryCategories, getGalleryCategoryLabel, normalizeGalleryRecords, normalizeGalleryCategory } from '../utils/gallery';
-import hospitalImg from '../assets/images/hospital.jpg';
-import marriageImg from '../assets/images/marriage.jpg';
-import waterImg from '../assets/images/water.jpg';
-import educationImg from '../assets/images/education.jpg';
-import financialImg from '../assets/images/financial.jpg';
-import schoolImg from '../assets/images/school.jpg';
-import heroBgImg from '../assets/images/hero-bg.jpg';
-import founderImg from '../assets/images/founder.jpg.jpeg';
 
 const fadeInUp = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
 
-const galleryImages = [
-  { id: 1, src: hospitalImg, title: 'Healthcare Assistance', category: 'healthcare_assistance', tall: true },
-  { id: 2, src: marriageImg, title: 'Marriage Support', category: 'marriage_support' },
-  { id: 3, src: waterImg, title: 'Water & Community Support', category: 'water_community_support' },
-  { id: 4, src: educationImg, title: 'Education & Support', category: 'education_support', tall: true },
-  { id: 5, src: financialImg, title: 'Community Outreach', category: 'community_outreach' },
-  { id: 6, src: schoolImg, title: 'Education Activity', category: 'education_support' },
-  { id: 7, src: heroBgImg, title: 'Community Outreach Event', category: 'community_outreach' },
-  { id: 8, src: founderImg, title: 'Foundation Community Event', category: 'other', tall: true },
-];
-
 const categories = galleryCategories.map((category) => category.value);
 
 export default function GalleryPage() {
-  const [gallery, setGallery] = useState(galleryImages);
+  const [gallery, setGallery] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState('All');
 
-  useEffect(() => {
-    const fetchGallery = async () => {
-      try {
-        const res = await galleryService.getGallery();
-        const records = normalizeGalleryRecords(res.data?.data || res.data);
-        if (records.length > 0) setGallery(records);
-      } catch {
-        // Keep the bundled gallery visible when the API is unavailable.
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchGallery = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await galleryService.getGallery();
+      setGallery(normalizeGalleryRecords(res.data?.data || res.data));
+    } catch {
+      setGallery([]);
+      setError('Unable to load the gallery right now. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchGallery();
+  useEffect(() => {
+    const timeoutId = window.setTimeout(fetchGallery, 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
+
+  // Lightbox behaviour: close on Escape and lock background scrolling while open.
+  useEffect(() => {
+    if (!selected) return undefined;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setSelected(null);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [selected]);
 
   const availableCategories = ['All', ...categories];
   const filtered = filter === 'All' ? gallery : gallery.filter((img) => normalizeGalleryCategory(img.category) === filter);
@@ -90,8 +90,21 @@ export default function GalleryPage() {
 
           {/* Masonry Grid */}
           {loading ? (
-            <div className="flex justify-center items-center h-64">
+            <div className="flex justify-center items-center h-64" role="status" aria-live="polite">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0d2c54]" />
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center text-center py-16">
+              <AlertCircle size={40} className="text-red-400 mb-3" />
+              <p className="text-gray-600 font-medium">{error}</p>
+              <button onClick={fetchGallery} className="mt-4 inline-flex items-center gap-2 bg-[#0d2c54] text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-[#1a4a7a] transition">
+                <RefreshCw size={16} /> Retry
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center py-16 text-gray-500">
+              <ImageOff size={40} className="text-gray-300 mb-3" />
+              <p className="font-medium">{gallery.length === 0 ? 'The gallery is empty right now.' : 'No images in this category yet.'}</p>
             </div>
           ) : (
           <motion.div
@@ -105,12 +118,23 @@ export default function GalleryPage() {
               <motion.div
                 key={img.id}
                 variants={fadeInUp}
+                role="button"
+                tabIndex={0}
+                aria-label={`View image: ${img.title || 'gallery image'}`}
                 onClick={() => setSelected(img)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelected(img);
+                  }
+                }}
                 className="relative group cursor-pointer rounded-2xl overflow-hidden break-inside-avoid bg-white shadow-md hover:shadow-xl transition-all duration-300"
               >
                 <img
                   src={img.src}
                   alt={img.title}
+                  loading="lazy"
+                  decoding="async"
                   className={`w-full object-cover group-hover:scale-105 transition-transform duration-700 ${img.tall ? 'h-72' : 'h-48'}`}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4">
@@ -136,9 +160,12 @@ export default function GalleryPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelected(null)}
-            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-6 cursor-pointer"
+            role="dialog"
+            aria-modal="true"
+            aria-label={selected.title ? `Image viewer: ${selected.title}` : 'Image viewer'}
+            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 cursor-pointer"
           >
-            <button onClick={() => setSelected(null)} className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition">
+            <button type="button" onClick={() => setSelected(null)} aria-label="Close image viewer" className="absolute top-5 right-5 sm:top-6 sm:right-6 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition">
               <X size={24} />
             </button>
             <motion.div
@@ -146,13 +173,13 @@ export default function GalleryPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.85, opacity: 0 }}
               transition={{ type: 'spring', damping: 25 }}
-              className="max-w-4xl"
+              className="max-w-4xl w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={selected.src}
                 alt={selected.title}
-                className="max-w-full max-h-[80vh] rounded-2xl shadow-2xl"
+                className="max-w-full max-h-[70vh] sm:max-h-[80vh] mx-auto rounded-2xl shadow-2xl"
               />
               <div className="mt-4 text-center">
                 <p className="text-white text-lg font-bold">{selected.title}</p>

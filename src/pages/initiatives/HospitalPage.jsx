@@ -1,20 +1,22 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { Hospital, Send, AlertTriangle } from 'lucide-react';
+import { Hospital, Send, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { initiativeService } from '../../services';
 
 export default function HospitalPage() {
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const onSubmit = async (data) => {
     setLoading(true);
     try {
       await initiativeService.submitHospital(data);
-      toast.success('Hospital assistance request submitted successfully!');
       reset();
+      setSubmitted(true);
     } catch {
       toast.error('Submission failed. Please try again.');
     } finally {
@@ -34,6 +36,19 @@ export default function HospitalPage() {
 
       <section className="py-16 px-6">
         <div className="max-w-3xl mx-auto">
+          {submitted ? (
+            <div className="bg-white rounded-2xl shadow-xl p-8 text-center" role="status" aria-live="polite">
+              <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                <CheckCircle size={34} className="text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-[#0d2c54]">Request Received!</h2>
+              <p className="text-gray-500 mt-2">Your hospital assistance request has been submitted successfully. Our medical team will review it and contact you within 24-48 hours.</p>
+              <div className="flex flex-wrap justify-center gap-3 mt-6">
+                <button type="button" onClick={() => setSubmitted(false)} className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:shadow-lg transition">Submit another request</button>
+                <Link to="/" className="border-2 border-[#0d2c54] text-[#0d2c54] px-6 py-2.5 rounded-xl font-semibold hover:bg-[#0d2c54] hover:text-white transition">Go to Home</Link>
+              </div>
+            </div>
+          ) : (
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white rounded-2xl shadow-xl p-8">
             <h2 className="text-2xl font-bold text-[#0d2c54] mb-6">Patient Intake Form</h2>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -93,6 +108,7 @@ export default function HospitalPage() {
               </button>
             </form>
           </motion.div>
+          )}
         </div>
       </section>
     </div>

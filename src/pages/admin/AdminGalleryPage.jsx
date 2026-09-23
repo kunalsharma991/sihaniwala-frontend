@@ -1,27 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Edit, Upload, Trash2 } from 'lucide-react';
+import { Edit, Upload, Trash2, AlertCircle, RefreshCw, ImageOff } from 'lucide-react';
 import { adminService } from '../../services';
 import { galleryCategories, getGalleryCategoryLabel, normalizeGalleryRecords } from '../../utils/gallery';
 import { toast } from 'react-toastify';
-import hospitalImg from '../../assets/images/hospital.jpg';
-import marriageImg from '../../assets/images/marriage.jpg';
-import waterImg from '../../assets/images/water.jpg';
-import educationImg from '../../assets/images/education.jpg';
-import financialImg from '../../assets/images/financial.jpg';
-import schoolImg from '../../assets/images/school.jpg';
-
-const mockGallery = [
-  { id: 1, src: hospitalImg, title: 'Healthcare Assistance', category: 'healthcare_assistance' },
-  { id: 2, src: marriageImg, title: 'Marriage Support', category: 'marriage_support' },
-  { id: 3, src: waterImg, title: 'Water & Community Support', category: 'water_community_support' },
-  { id: 4, src: educationImg, title: 'Education & Support', category: 'education_support' },
-  { id: 5, src: financialImg, title: 'Community Outreach', category: 'community_outreach' },
-  { id: 6, src: schoolImg, title: 'Education Activity', category: 'education_support' },
-];
 
 export default function AdminGalleryPage() {
-  const [gallery, setGallery] = useState(mockGallery);
+  const [gallery, setGallery] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({ file: null, title: '', category: '', description: '' });
   const [editing, setEditing] = useState(null);
@@ -30,11 +16,12 @@ export default function AdminGalleryPage() {
   const fetchGallery = async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await adminService.getGallery();
-      const records = normalizeGalleryRecords(res.data?.data || res.data);
-      setGallery(records.length > 0 ? records : mockGallery);
+      setGallery(normalizeGalleryRecords(res.data?.data || res.data));
     } catch {
-      setGallery(mockGallery);
+      setGallery([]);
+      setError('Failed to load gallery images.');
       toast.error('Failed to load gallery');
     } finally {
       setLoading(false);
@@ -168,15 +155,29 @@ export default function AdminGalleryPage() {
       )}
 
       {loading ? (
-        <div className="flex justify-center items-center h-64">
+        <div className="flex justify-center items-center h-64" role="status" aria-live="polite">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0d2c54]" />
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center text-center py-16">
+          <AlertCircle size={40} className="text-red-400 mb-3" />
+          <p className="text-gray-600 font-medium">{error}</p>
+          <button onClick={fetchGallery} className="mt-4 inline-flex items-center gap-2 bg-[#0d2c54] text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-[#1a4a7a] transition">
+            <RefreshCw size={16} /> Retry
+          </button>
+        </div>
+      ) : gallery.length === 0 ? (
+        <div className="flex flex-col items-center justify-center text-center py-16 text-gray-500">
+          <ImageOff size={40} className="text-gray-300 mb-3" />
+          <p className="font-medium">No gallery images yet.</p>
+          <p className="text-sm mt-1">Upload your first image using the form above.</p>
         </div>
       ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {gallery.map(item => (
           <div key={item.id} className="relative group rounded-xl overflow-hidden bg-gray-100">
             <div className="aspect-square">
-            <img src={item.src} alt={item.title} className="w-full h-full object-cover" />
+            <img src={item.src} alt={item.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/50 transition-all flex items-center justify-center gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100">
               <button onClick={() => handleDelete(item.id)} aria-label={`Delete ${item.title || 'image'}`} className="bg-red-500 text-white p-3 rounded-full hover:bg-red-600 transition shadow">
                 <Trash2 size={18} />

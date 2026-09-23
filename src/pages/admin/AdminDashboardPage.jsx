@@ -5,22 +5,25 @@ import {
   Users, FileText, CreditCard, CheckCircle, XCircle, Clock,
   TrendingUp, DollarSign, BarChart3, UserCheck, Mail, Heart
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-// Chart data remains static for now (can be made dynamic later)
-const monthlyData = [
-  { month: 'Jan', donations: 45000 }, { month: 'Feb', donations: 62000 },
-  { month: 'Mar', donations: 78000 }, { month: 'Apr', donations: 55000 },
-  { month: 'May', donations: 92000 }, { month: 'Jun', donations: 110000 },
-];
-
-const pieData = [
-  { name: 'Hospital', value: 30, color: '#3b82f6' },
-  { name: 'Education', value: 25, color: '#8b5cf6' },
-  { name: 'Marriage', value: 20, color: '#ec4899' },
-  { name: 'Financial', value: 15, color: '#f97316' },
-  { name: 'School', value: 10, color: '#14b8a6' },
-];
+// A small honest placeholder used where no verified analytics data source exists
+// yet. The backend dashboard endpoint only exposes aggregate counts (see the
+// stat cards / Platform Summary below); it does not provide a monthly donation
+// time-series or an initiative-wise breakdown, so we intentionally avoid
+// displaying fabricated chart numbers.
+function AnalyticsEmptyState({ icon: Icon = BarChart3, title }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6 border">
+      <h3 className="font-bold text-lg text-[#0d2c54] mb-4 flex items-center gap-2">
+        <Icon size={20} /> {title}
+      </h3>
+      <div className="flex flex-col items-center justify-center text-center py-14 text-gray-400">
+        <BarChart3 size={40} className="mb-3 text-gray-300" />
+        <p className="text-sm font-medium">No analytics data available yet.</p>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({
@@ -214,34 +217,12 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* Charts */}
+      {/* Charts – the backend does not yet expose a monthly donation
+          time-series or an initiative distribution breakdown, so these are
+          shown as honest empty states instead of fabricated numbers. */}
       <div className="grid lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-2xl shadow-lg p-6 border">
-          <h3 className="font-bold text-lg text-[#0d2c54] mb-4 flex items-center gap-2">
-            <BarChart3 size={20} /> Monthly Donations
-          </h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(val) => `₹${val.toLocaleString()}`} />
-              <Bar dataKey="donations" fill="#f97316" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg p-6 border">
-          <h3 className="font-bold text-lg text-[#0d2c54] mb-4">Initiative Distribution</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <AnalyticsEmptyState title="Monthly Donations" />
+        <AnalyticsEmptyState icon={Heart} title="Initiative Distribution" />
       </div>
 
       {/* Quick Stats Summary */}

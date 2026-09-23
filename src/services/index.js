@@ -29,6 +29,12 @@ export const galleryService = {
   getGallery: () => api.get('/api/gallery'),
 };
 
+// Public, unauthenticated project listings (backed by GET /api/projects).
+export const projectService = {
+  getProjects: () => api.get('/api/projects'),
+  getProject: (id) => api.get(`/api/projects/${id}`),
+};
+
 export const adminService = {
   getDashboard: () => api.get('/api/admin/dashboard'),
   getApplications: (params) => api.get('/api/admin/applications', params ? { params } : {}),

@@ -38,7 +38,7 @@ export default function DonationSuccessPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 py-12 px-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 py-12 px-6" role="status" aria-live="polite">
       {processing ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
           <Loader size={48} className="animate-spin text-orange-500 mx-auto mb-4" />
@@ -55,7 +55,7 @@ export default function DonationSuccessPage() {
           <p className="text-gray-600 mt-4">
             There was an issue confirming your payment. Please contact our support team with your order details.
           </p>
-          <div className="flex gap-4 justify-center mt-8">
+          <div className="flex flex-wrap gap-4 justify-center mt-8">
             <Link to="/" className="flex items-center gap-2 bg-[#0d2c54] text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg transition">
               <Home size={18} /> Home
             </Link>
@@ -80,7 +80,7 @@ export default function DonationSuccessPage() {
             <p className="text-gray-700 font-medium">"No one has ever become poor by giving."</p>
             <p className="text-gray-500 text-sm mt-1">- Anne Frank</p>
           </div>
-          <div className="flex gap-4 justify-center mt-8">
+          <div className="flex flex-wrap gap-4 justify-center mt-8">
             <Link to="/" className="flex items-center gap-2 bg-[#0d2c54] text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg transition">
               <Home size={18} /> Home
             </Link>

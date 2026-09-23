@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, ArrowRight, Users, HandHeart, GraduationCap, Hospital, Truck, BookOpen, Wallet, School, Star, Sparkles, Shield } from "lucide-react";
-import { useScrollAnimation, useCountUp } from "../hooks/useScrollAnimation";
+import { useScrollAnimation } from "../hooks/useScrollAnimation";
 import founderImg from "../assets/images/founder.jpg.jpeg";
-import heroBgImg from "../assets/images/hero-bg.jpg";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -31,14 +30,19 @@ const coreValues = [
   { icon: Sparkles, title: "Community Development", desc: "Building stronger, self-reliant communities together." },
 ];
 
-function StatCard({ value, label, suffix = "+" }) {
-  const { ref, count } = useCountUp(value);
+// Honest, non-numeric impact pillars. Previously this band rendered fabricated
+// count-up figures (500+, 1000+, 200, 50) that had no backing API or admin
+// source and could not be verified/updated by the organisation, so they read as
+// live metrics. Until a real impact endpoint exists we show qualitative
+// statements that accurately reflect the work without inventing statistics.
+function ImpactPillar({ icon: Icon, title, note }) {
   return (
-    <div ref={ref} className="text-center group">
-      <div className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg">
-        {count}{suffix}
+    <div className="text-center group">
+      <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center group-hover:scale-110 transition-all">
+        <Icon size={26} className="text-orange-400" />
       </div>
-      <p className="text-blue-200/80 mt-2 text-sm font-medium tracking-wide">{label}</p>
+      <p className="text-white font-bold text-lg">{title}</p>
+      <p className="text-blue-200/80 mt-1 text-sm font-medium">{note}</p>
     </div>
   );
 }
@@ -50,10 +54,6 @@ export default function HomePage() {
     <div>
       {/* ===== HERO SECTION ===== */}
       <section className="relative min-h-[92vh] flex items-center overflow-hidden bg-[#0d2c54]">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <img src={heroBgImg} alt="" className="w-full h-full object-cover opacity-10" />
-        </div>
         {/* Decorative Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-10 w-80 h-80 bg-orange-500/10 rounded-full blur-[100px]" />
@@ -80,14 +80,14 @@ export default function HomePage() {
               <span className="text-orange-400 font-semibold text-sm tracking-wide">Welcome to Sihaniwala Foundation</span>
             </motion.div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.1]">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.1]">
               BUILDING A{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400">
                 BETTER
               </span>{" "}
               TOMORROW
             </h1>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-orange-400 mt-2">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-orange-400 mt-2">
               FOR HUMANITY
             </h2>
             <p className="mt-6 text-gray-300/90 text-lg leading-relaxed max-w-lg">
@@ -151,11 +151,16 @@ export default function HomePage() {
       {/* ===== IMPACT STATS ===== */}
       <section className="relative bg-gradient-to-r from-[#0d2c54] via-[#0f3460] to-[#1a4a8a] py-16 -mt-1 overflow-hidden">
         <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 relative z-10">
-          <StatCard value={500} label="Families Supported" />
-          <StatCard value={1000} label="Meals Distributed" />
-          <StatCard value={200} label="Volunteers Joined" />
-          <StatCard value={50} label="Social Projects" />
+        <div className="max-w-5xl mx-auto px-6 relative z-10">
+          <p className="text-center text-blue-200/80 text-sm font-medium tracking-wide uppercase mb-8">
+            Growing our impact across every community initiative
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <ImpactPillar icon={Heart} title="Families Supported" note="At the heart of our work" />
+            <ImpactPillar icon={HandHeart} title="Meals & Relief" note="Shared with care" />
+            <ImpactPillar icon={Users} title="Volunteers" note="Powered by community" />
+            <ImpactPillar icon={Sparkles} title="Projects" note="Growing every year" />
+          </div>
         </div>
       </section>
 

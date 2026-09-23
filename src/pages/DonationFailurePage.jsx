@@ -19,7 +19,7 @@ export default function DonationFailurePage() {
           <p className="text-gray-700 font-medium">Need help?</p>
           <p className="text-gray-500 text-sm mt-1">Contact us at sihaniwalafoundation@gmail.com</p>
         </div>
-        <div className="flex gap-4 justify-center mt-8">
+        <div className="flex flex-wrap gap-4 justify-center mt-8">
           <Link to="/" className="flex items-center gap-2 bg-[#0d2c54] text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg transition">
             <Home size={18} /> Home
           </Link>

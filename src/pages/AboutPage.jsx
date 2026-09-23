@@ -105,7 +105,7 @@ export default function AboutPage() {
             <div className="shrink-0">
               <div className="relative">
                 <div className="absolute -inset-3 bg-gradient-to-br from-orange-500/10 to-blue-500/10 rounded-3xl blur-xl" />
-                <img src={founderImg} alt="Founder" className="relative w-48 h-48 rounded-2xl object-cover shadow-2xl ring-4 ring-orange-500/20" />
+                <img src={founderImg} alt="Founder" loading="lazy" decoding="async" className="relative w-48 h-48 rounded-2xl object-cover shadow-2xl ring-4 ring-orange-500/20" />
               </div>
             </div>
             <div className="text-center md:text-left">

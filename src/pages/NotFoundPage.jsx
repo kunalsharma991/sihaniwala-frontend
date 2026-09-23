@@ -10,14 +10,14 @@ export default function NotFoundPage() {
 
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-lg relative">
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }}>
-          <h1 className="text-[10rem] font-extrabold text-white/10 leading-none select-none">404</h1>
+          <div className="text-7xl sm:text-[10rem] font-extrabold text-white/10 leading-none select-none" aria-hidden="true">404</div>
         </motion.div>
-        <h2 className="text-4xl font-extrabold text-white -mt-16">Page Not Found</h2>
+        <h1 className="text-4xl font-extrabold text-white -mt-16">Page Not Found</h1>
         <p className="text-gray-300 mt-4 text-lg">
           The page you're looking for doesn't exist or has been moved.
           Let's get you back on track.
         </p>
-        <div className="flex gap-4 justify-center mt-10">
+        <div className="flex flex-wrap gap-4 justify-center mt-10">
           <Link to="/" className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-8 py-3.5 rounded-full font-bold hover:shadow-xl hover:shadow-orange-500/25 transition-all">
             <Home size={18} /> Go Home
           </Link>

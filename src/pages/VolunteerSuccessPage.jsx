@@ -89,7 +89,7 @@ export default function VolunteerSuccessPage() {
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={() => window.print()}
             className="flex-1 border-2 border-[#0d2c54] text-[#0d2c54] py-2 rounded-xl font-semibold hover:bg-[#0d2c54] hover:text-white transition"

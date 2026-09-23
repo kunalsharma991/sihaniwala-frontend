@@ -409,6 +409,10 @@ export default function DonatePage() {
                     <img
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('upi://pay?pa=8750970075m@pnb&pn=Sihaniwala Foundation Charitable Trust&cu=INR')}`}
                       alt="UPI QR Code - Sihaniwala Foundation"
+                      loading="lazy"
+                      decoding="async"
+                      width={200}
+                      height={200}
                       className="w-48 h-48"
                     />
                     <p className="text-sm text-gray-600 font-medium">UPI ID: <span className="text-[#0d2c54] font-bold">8750970075m@pnb</span></p>
