@@ -153,12 +153,12 @@ export default function AdminGalleryPage() {
         <form onSubmit={handleUpdate} className="bg-orange-50 rounded-xl p-5 mb-8 shadow-sm space-y-4">
           <h2 className="font-semibold text-[#0d2c54]">Edit gallery metadata</h2>
           <div className="grid gap-4 md:grid-cols-3">
-            <input className="border rounded-lg px-3 py-2" value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} placeholder="Title *" disabled={savingEdit} />
-            <select className="border rounded-lg px-3 py-2" value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })} disabled={savingEdit}>
+            <input aria-label="Title" className="border rounded-lg px-3 py-2" value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} placeholder="Title *" disabled={savingEdit} />
+            <select aria-label="Activity category" className="border rounded-lg px-3 py-2" value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })} disabled={savingEdit}>
               <option value="">Select an activity</option>
               {galleryCategories.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
-            <input className="border rounded-lg px-3 py-2" value={editing.description || ''} onChange={(e) => setEditing({ ...editing, description: e.target.value })} placeholder="Description" disabled={savingEdit} />
+            <input aria-label="Description" className="border rounded-lg px-3 py-2" value={editing.description || ''} onChange={(e) => setEditing({ ...editing, description: e.target.value })} placeholder="Description" disabled={savingEdit} />
           </div>
           <div className="flex gap-3">
             <button type="submit" className="bg-[#0d2c54] text-white px-4 py-2 rounded-lg" disabled={savingEdit}>{savingEdit ? 'Saving...' : 'Save changes'}</button>
@@ -172,16 +172,16 @@ export default function AdminGalleryPage() {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0d2c54]" />
         </div>
       ) : (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {gallery.map(item => (
           <div key={item.id} className="relative group rounded-xl overflow-hidden bg-gray-100">
             <div className="aspect-square">
             <img src={item.src} alt={item.title} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <button onClick={() => handleDelete(item.id)} className="bg-red-500 text-white p-3 rounded-full hover:bg-red-600 transition">
+            <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/50 transition-all flex items-center justify-center gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100">
+              <button onClick={() => handleDelete(item.id)} aria-label={`Delete ${item.title || 'image'}`} className="bg-red-500 text-white p-3 rounded-full hover:bg-red-600 transition shadow">
                 <Trash2 size={18} />
               </button>
-              <button onClick={() => setEditing({ id: item.id, title: item.title || '', category: item.category || '', description: item.description || '' })} className="bg-white text-[#0d2c54] p-3 rounded-full hover:bg-gray-100 transition">
+              <button onClick={() => setEditing({ id: item.id, title: item.title || '', category: item.category || '', description: item.description || '' })} aria-label={`Edit ${item.title || 'image'}`} className="bg-white text-[#0d2c54] p-3 rounded-full hover:bg-gray-100 transition shadow">
                 <Edit size={18} />
               </button>
             </div>

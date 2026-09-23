@@ -56,8 +56,8 @@ export default function AdminContactsPage() {
   );
 
   return (
-    <div className="p-6">
-      <div className="mb-8 flex justify-between items-center">
+    <div>
+      <div className="mb-8 flex flex-wrap justify-between items-center gap-3">
         <div>
         <h1 className="text-3xl font-bold text-[#0d2c54]">Contact Messages</h1>
           <p className="text-gray-500">View and manage contact form submissions ({contacts.length} total)</p>
@@ -88,7 +88,7 @@ export default function AdminContactsPage() {
                   </div>
                   <div className="flex flex-col items-end gap-2 ml-3">
                     <span className="text-xs text-gray-400">{c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN') : ''}</span>
-                    <button onClick={e => { e.stopPropagation(); handleDelete(c.id); }} className="p-1 text-red-400 hover:bg-red-50 rounded">
+                    <button onClick={e => { e.stopPropagation(); handleDelete(c.id); }} aria-label={`Delete message from ${c.name || 'contact'}`} className="p-1 text-red-400 hover:bg-red-50 rounded">
                       <Trash2 size={14} />
                     </button>
                   </div>

@@ -44,8 +44,8 @@ export default function AdminVolunteersPage() {
   );
 
   return (
-    <div className="p-6">
-      <div className="mb-8 flex justify-between items-center">
+    <div>
+      <div className="mb-8 flex flex-wrap justify-between items-center gap-3">
         <div>
           <h1 className="text-3xl font-bold text-[#0d2c54]">Volunteers</h1>
           <p className="text-gray-500">Manage registered volunteers ({volunteers.length} total)</p>
@@ -73,7 +73,7 @@ export default function AdminVolunteersPage() {
                     {v.skills && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{v.skills}</span>}
                   </div>
                 </div>
-                <button onClick={() => handleDelete(v.id)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition">
+                <button onClick={() => handleDelete(v.id)} aria-label={`Remove ${v.name || 'volunteer'}`} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition">
                   <Trash2 size={15} />
                 </button>
               </div>

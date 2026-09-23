@@ -15,6 +15,7 @@ export default function AdminDonationsPage() {
       setDonations(data.data || []);
     } catch (err) {
       console.error('Failed to fetch donations:', err);
+      toast.error('Failed to load donations. Please try again.');
     } finally {
       setLoading(false);
     }

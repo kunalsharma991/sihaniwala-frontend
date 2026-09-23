@@ -37,6 +37,7 @@ export default function Footer() {
       {/* Scroll to top */}
       <button
         onClick={scrollToTop}
+        aria-label="Scroll to top"
         className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-lg shadow-orange-500/30 flex items-center justify-center hover:scale-110 transition-transform z-10"
       >
         <ArrowUp size={20} />
@@ -60,7 +61,7 @@ export default function Footer() {
             </p>
             <div className="flex gap-3">
               {socialIcons.map((s) => (
-                <button key={s.name} className="w-9 h-9 bg-white/10 hover:bg-orange-500 rounded-lg flex items-center justify-center transition-all hover:scale-110">
+                <button key={s.name} aria-label={s.name} className="w-9 h-9 bg-white/10 hover:bg-orange-500 rounded-lg flex items-center justify-center transition-all hover:scale-110">
                   {s.svg}
                 </button>
               ))}

@@ -106,8 +106,8 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      {!isCurrentUser && <button onClick={() => handleToggle(u.id)} className="p-2 text-[#0d2c54] hover:bg-blue-50 rounded-lg" title={u.enabled ? 'Disable user' : 'Enable user'}><Power size={16} /></button>}
-                      {!isCurrentUser && <button onClick={() => handleDelete(u)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Delete user"><Trash2 size={16} /></button>}
+                      {!isCurrentUser && <button onClick={() => handleToggle(u.id)} aria-label={u.enabled ? `Disable ${u.name}` : `Enable ${u.name}`} className="p-2 text-[#0d2c54] hover:bg-blue-50 rounded-lg" title={u.enabled ? 'Disable user' : 'Enable user'}><Power size={16} /></button>}
+                      {!isCurrentUser && <button onClick={() => handleDelete(u)} aria-label={`Delete ${u.name}`} className="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Delete user"><Trash2 size={16} /></button>}
                       {isCurrentUser && <span className="text-xs text-gray-400">Current admin</span>}
                     </div>
                   </td>

@@ -54,12 +54,23 @@ body {
   break-inside: avoid;
 }
 
-/* Focus ring override for accessibility */
+/* Form fields already render a Tailwind focus ring, so suppress the default outline only here */
 input:focus,
 select:focus,
-textarea:focus,
-button:focus-visible {
+textarea:focus {
   outline: none;
+}
+
+/* Restore a visible keyboard focus indicator for interactive elements */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* Gradient text helper */

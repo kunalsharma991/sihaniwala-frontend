@@ -109,7 +109,7 @@ export default function AdminApplicationsPage() {
   );
 
   return (
-    <div className="p-6">
+    <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[#0d2c54]">Applications</h1>
         <p className="text-gray-500">Manage all initiative applications ({applications.length} total)</p>

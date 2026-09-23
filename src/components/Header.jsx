@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Heart, Phone, Mail } from 'lucide-react';
 import logoImg from '../assets/images/logo.jpg.jpeg';
@@ -17,12 +17,23 @@ const navLinks = [
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Allow Escape to close the mobile menu. Mobile nav links already close it on selection.
+  useEffect(() => {
+    if (!mobileOpen) return undefined;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setMobileOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [mobileOpen]);
 
   return (
     <>
@@ -79,10 +90,17 @@ export default function Header() {
               <Link
                 key={link.path}
                 to={link.path}
-                className="text-[#0d2c54]/80 hover:text-[#0d2c54] font-medium text-sm px-4 py-2 rounded-lg hover:bg-[#0d2c54]/5 transition-all relative group"
+                aria-current={location.pathname === link.path ? 'page' : undefined}
+                className={`font-medium text-sm px-4 py-2 rounded-lg transition-all relative group ${
+                  location.pathname === link.path
+                    ? 'text-[#0d2c54] bg-[#0d2c54]/5'
+                    : 'text-[#0d2c54]/80 hover:text-[#0d2c54] hover:bg-[#0d2c54]/5'
+                }`}
               >
                 {link.name}
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-orange-500 rounded-full transition-all duration-300 group-hover:w-6" />
+                <span className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 bg-orange-500 rounded-full transition-all duration-300 ${
+                  location.pathname === link.path ? 'w-6' : 'w-0 group-hover:w-6'
+                }`} />
               </Link>
             ))}
           </nav>
@@ -100,6 +118,9 @@ export default function Header() {
             {/* Mobile Toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-menu"
               className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition text-[#0d2c54]"
             >
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
@@ -116,6 +137,7 @@ export default function Header() {
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="lg:hidden overflow-hidden border-t bg-white"
+              id="mobile-menu"
             >
               <nav className="px-4 py-4 space-y-1">
                 {navLinks.map((link) => (
@@ -123,7 +145,12 @@ export default function Header() {
                     key={link.path}
                     to={link.path}
                     onClick={() => setMobileOpen(false)}
-                    className="block py-3 px-4 text-gray-700 hover:text-[#0d2c54] hover:bg-[#0d2c54]/5 font-medium rounded-xl transition"
+                    aria-current={location.pathname === link.path ? 'page' : undefined}
+                    className={`block py-3 px-4 font-medium rounded-xl transition ${
+                      location.pathname === link.path
+                        ? 'text-[#0d2c54] bg-[#0d2c54]/5'
+                        : 'text-gray-700 hover:text-[#0d2c54] hover:bg-[#0d2c54]/5'
+                    }`}
                   >
                     {link.name}
                   </Link>

@@ -65,8 +65,8 @@ export default function AdminProjectsPage() {
   if (loading) return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0d2c54]"></div></div>;
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div>
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
         <h1 className="text-2xl font-bold text-[#0d2c54]">Projects</h1>
         <button onClick={openAdd} className="flex items-center gap-2 bg-[#0d2c54] text-white px-4 py-2 rounded-lg hover:bg-[#1a4a7a] transition">
           <Plus size={18} /> Add Project
@@ -75,10 +75,10 @@ export default function AdminProjectsPage() {
 
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl">
+          <div className="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-[#0d2c54]">{editingId ? 'Edit Project' : 'Add Project'}</h2>
-              <button onClick={closeForm}><X size={20} /></button>
+              <button type="button" onClick={closeForm} aria-label="Close project form" className="p-1 text-gray-500 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
             </div>
             <div className="space-y-3">
               <input className="w-full border rounded-lg px-3 py-2" placeholder="Title *" value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
@@ -92,8 +92,8 @@ export default function AdminProjectsPage() {
               </select>
             </div>
             <div className="flex gap-3 mt-5 justify-end">
-              <button onClick={closeForm} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 bg-[#0d2c54] text-white px-4 py-2 rounded-lg hover:bg-[#1a4a7a] disabled:opacity-50">
+                <button type="button" onClick={closeForm} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                <button type="button" onClick={handleSave} disabled={saving} className="flex items-center gap-2 bg-[#0d2c54] text-white px-4 py-2 rounded-lg hover:bg-[#1a4a7a] disabled:opacity-50">
                 <Save size={16} /> {saving ? 'Saving...' : 'Save'}
               </button>
             </div>
@@ -119,8 +119,8 @@ export default function AdminProjectsPage() {
                 </div>
               </div>
               <div className="flex gap-2 ml-4 shrink-0">
-                <button onClick={() => openEdit(p)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"><Edit size={16} /></button>
-                <button onClick={() => handleDelete(p.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"><Trash2 size={16} /></button>
+                <button type="button" onClick={() => openEdit(p)} aria-label={`Edit ${p.title}`} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"><Edit size={16} /></button>
+                <button type="button" onClick={() => handleDelete(p.id)} aria-label={`Delete ${p.title}`} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"><Trash2 size={16} /></button>
               </div>
             </div>
           ))}
