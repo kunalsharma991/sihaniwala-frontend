@@ -45,13 +45,11 @@ export default function AdminDashboardPage() {
       setError(null);
       
       const response = await adminService.getDashboard();
-      console.log('[AdminDashboard] API Response:', response);
-      
+
       // Extract data from response.data.data (axios wraps in data, then our ApiResponse wraps in data)
       const dashboardData = response.data?.data;
       
       if (dashboardData) {
-        console.log('[AdminDashboard] Dashboard Stats:', dashboardData);
         setStats({
           totalUsers: dashboardData.totalUsers ?? 0,
           totalDonations: dashboardData.totalDonations ?? 0,

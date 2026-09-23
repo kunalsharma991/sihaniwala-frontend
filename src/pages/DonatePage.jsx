@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import { Heart, IndianRupee, DollarSign, Euro, CheckCircle, Utensils, BookOpen, Stethoscope, Users, Shield, Lock, Globe, CreditCard } from 'lucide-react';
@@ -20,7 +21,11 @@ const donationCategories = [
 
 const paypalCurrencies = ['USD', 'EUR', 'GBP', 'AUD', 'CAD'];
 
+const currencySymbols = { INR: '₹', USD: '$', EUR: '€', GBP: '£', AUD: 'A$', CAD: 'C$' };
+const getCurrencySymbol = (code) => currencySymbols[code] || '$';
+
 export default function DonatePage() {
+  const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [amount, setAmount] = useState(1000);
   const [customAmount, setCustomAmount] = useState('');
@@ -92,14 +97,14 @@ export default function DonatePage() {
             });
             if (verifyResult.data?.status === 'SUCCESS') {
               toast.success('Donation successful! Thank you for your generosity.');
-              window.location.href = '/donation-success';
+              navigate('/donation-success');
             } else {
               toast.error('Payment verification failed.');
-              window.location.href = '/donation-failure';
+              navigate('/donation-failure');
             }
-          } catch (err) {
+          } catch {
             toast.error('Payment verification failed.');
-            window.location.href = '/donation-failure';
+            navigate('/donation-failure');
           }
         },
         prefill: {
@@ -313,7 +318,7 @@ export default function DonatePage() {
                 <div>
                   <p className="font-bold text-green-800">Donation Summary</p>
                   <p className="text-sm text-green-600">
-                    {currency === 'INR' ? '₹' : currency === 'USD' ? '$' : '€'}{finalAmount?.toLocaleString()} — {initiative} {recurring ? '(Monthly)' : '(One-time)'}
+                    {getCurrencySymbol(currency)}{finalAmount?.toLocaleString()} — {initiative} {recurring ? '(Monthly)' : '(One-time)'}
                   </p>
                 </div>
               </div>
@@ -323,7 +328,7 @@ export default function DonatePage() {
               {/* Payment Method Selection */}
               <div className="mb-6">
                 <label className="block text-sm font-bold text-gray-700 mb-3">Select Payment Method</label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
                     onClick={() => setPaymentMethod('razorpay')}
                     disabled={currency !== 'INR'}
@@ -362,29 +367,11 @@ export default function DonatePage() {
                     <p className="text-xs text-gray-500 ml-8">Cards, PayPal Balance, Bank</p>
                     <span className="inline-block mt-2 ml-8 text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">International</span>
                   </button>
-
-                  <button
-                    onClick={() => setPaymentMethod('bank')}
-                    className={`relative p-5 rounded-2xl border-2 transition-all text-left ${
-                      paymentMethod === 'bank'
-                        ? 'border-orange-500 bg-orange-50 shadow-lg shadow-orange-500/10'
-                        : 'border-gray-200 hover:border-orange-300 bg-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'bank' ? 'border-orange-500' : 'border-gray-300'}`}>
-                        {paymentMethod === 'bank' && <div className="w-3 h-3 rounded-full bg-orange-500" />}
-                      </div>
-                      <span className="font-bold text-[#0d2c54]">Bank Transfer</span>
-                    </div>
-                    <p className="text-xs text-gray-500 ml-8">Direct account transfer</p>
-                    <span className="inline-block mt-2 ml-8 text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">All Donors</span>
-                  </button>
                 </div>
               </div>
 
-              {paymentMethod === 'bank' && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 space-y-4">
+              {/* Bank transfer reference details (not a tracked online payment workflow) */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 space-y-4">
                   <h3 className="text-lg font-bold text-[#0d2c54] flex items-center gap-2">
                     🏦 Direct Bank Transfer
                   </h3>
@@ -436,11 +423,10 @@ export default function DonatePage() {
                       ✅ All donations to Sihaniwala Foundation Charitable Trust are eligible for <strong>80G tax exemption</strong>.
                     </p>
                   </div>
-                </div>
-              )}
+              </div>
 
               {/* Pay Button */}
-              {paymentMethod !== 'bank' && <button
+              <button
                 onClick={handlePayment}
                 disabled={loading || (paymentMethod === 'razorpay' && currency !== 'INR')}
                 className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-xl font-bold hover:shadow-xl hover:shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
@@ -458,16 +444,16 @@ export default function DonatePage() {
                 ) : (
                   <>
                     <Globe size={22} />
-                    Pay {currency === 'INR' ? '₹' : currency === 'USD' ? '$' : '€'}{finalAmount?.toLocaleString()} via PayPal
+                    Pay {getCurrencySymbol(currency)}{finalAmount?.toLocaleString()} via PayPal
                   </>
                 )}
-              </button>}
+              </button>
 
               {/* Security badges */}
               <div className="flex items-center justify-center gap-4 text-[11px] text-gray-400 pt-4">
                 <span className="flex items-center gap-1"><Shield size={12} /> SSL Encrypted</span>
                 <span className="w-1 h-1 bg-gray-300 rounded-full" />
-                <span className="flex items-center gap-1"><Lock size={12} /> {paymentMethod === 'razorpay' ? 'Secured by Razorpay' : paymentMethod === 'paypal' ? 'Secured by PayPal' : 'Direct Bank Transfer'}</span>
+                <span className="flex items-center gap-1"><Lock size={12} /> {paymentMethod === 'razorpay' ? 'Secured by Razorpay' : 'Secured by PayPal'}</span>
                 <span className="w-1 h-1 bg-gray-300 rounded-full" />
                 <span className="flex items-center gap-1"><CheckCircle size={12} /> PCI Compliant</span>
               </div>

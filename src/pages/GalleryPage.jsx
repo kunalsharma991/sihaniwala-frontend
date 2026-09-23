@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ZoomIn, Camera } from 'lucide-react';
 import { galleryService } from '../services';
-import { galleryCategories, getGalleryCategoryLabel, normalizeGalleryRecords } from '../utils/gallery';
+import { galleryCategories, getGalleryCategoryLabel, normalizeGalleryRecords, normalizeGalleryCategory } from '../utils/gallery';
 import hospitalImg from '../assets/images/hospital.jpg';
 import marriageImg from '../assets/images/marriage.jpg';
 import waterImg from '../assets/images/water.jpg';
@@ -50,12 +50,8 @@ export default function GalleryPage() {
     fetchGallery();
   }, []);
 
-  const categoriesWithRecords = gallery
-    .map((image) => image.category)
-    .filter((category, index, allCategories) => category && allCategories.indexOf(category) === index);
-  const availableCategories = ['All', ...categories,
-    ...categoriesWithRecords.filter((category) => !categories.includes(category))];
-  const filtered = filter === 'All' ? gallery : gallery.filter((img) => img.category === filter);
+  const availableCategories = ['All', ...categories];
+  const filtered = filter === 'All' ? gallery : gallery.filter((img) => normalizeGalleryCategory(img.category) === filter);
 
   return (
     <div>

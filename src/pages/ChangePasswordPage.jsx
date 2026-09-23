@@ -3,12 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { Eye, EyeOff, Lock } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 import { authService } from '../services';
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -44,7 +42,7 @@ export default function ChangePasswordPage() {
       });
       toast.success('Password changed successfully');
       reset();
-      navigate(user?.role === 'ADMIN' ? '/admin' : '/dashboard');
+      navigate('/admin');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to change password');
     } finally {
