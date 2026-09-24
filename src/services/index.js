@@ -37,6 +37,8 @@ export const projectService = {
 
 export const adminService = {
   getDashboard: () => api.get('/api/admin/dashboard'),
+  getDonationAnalytics: () => api.get('/api/admin/analytics/donations'),
+  getApplicationAnalytics: () => api.get('/api/admin/analytics/applications'),
   getApplications: (params) => api.get('/api/admin/applications', params ? { params } : {}),
   updateApplicationStatus: (id, status) => api.put(`/api/admin/applications/${id}/status`, { status }),
   getGallery: () => api.get('/api/admin/gallery'),
