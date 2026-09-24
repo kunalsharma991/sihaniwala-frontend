@@ -6,8 +6,8 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import {
-  Users, FileText, CreditCard, CheckCircle, XCircle, Clock, FolderOpen,
-  DollarSign, BarChart3, UserCheck, Mail, Heart, Layers, AlertCircle
+  Users, FileText, CreditCard, CheckCircle, XCircle, Hourglass, FolderOpen,
+  DollarSign, BarChart3, UserCheck, Mail, Heart, Layers, AlertCircle, Search
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -51,23 +51,58 @@ const GATEWAY_META = [
 // Unwraps the backend ApiResponse envelope: axios `data` -> our `data`.
 const payloadOf = (response) => response?.data?.data ?? null;
 
+// Wraps a long category label into short lines so axis text is never clipped
+// or overlapping on narrow (mobile) screens. Display-only — the underlying
+// value, tooltip, and screen-reader summary keep the full original label.
+const wrapLabel = (text, maxChars) => {
+  const words = String(text).split(' ');
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length <= maxChars) {
+      current = candidate;
+    } else {
+      if (current) lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length ? lines.slice(0, 3) : [String(text)];
+};
+
+// Custom Y-axis tick for the vertical (horizontal-bar) chart: renders the
+// category label right-aligned and wrapped so long initiative names stay
+// readable on small screens without introducing page-level horizontal scroll.
+function CategoryYTick({ x, y, payload, maxChars = 16 }) {
+  const lines = wrapLabel(payload.value, maxChars);
+  const lineHeight = 13;
+  const startY = y - ((lines.length - 1) * lineHeight) / 2;
+  return (
+    <g>
+      {lines.map((line, i) => (
+        <text key={i} x={x - 6} y={startY + i * lineHeight} textAnchor="end" fontSize={11} fill="#6b7280">
+          {line}
+        </text>
+      ))}
+    </g>
+  );
+}
+
 /**
  * Card wrapper for a single analytics section. Renders exactly one of
- * loading / error (with retry) / honest empty state / children — never
- * fabricated numbers and never a misleading empty axis set.
+ * error (with retry) / honest empty state / children — never fabricated
+ * numbers and never a misleading empty axis set. Initial loading is handled
+ * by the page-level skeleton, so there is no per-card loading state.
  */
-function ChartCard({ icon: Icon = BarChart3, title, subtitle, loading, error, onRetry, empty, emptyMessage, children }) {
+function ChartCard({ icon: Icon = BarChart3, title, subtitle, error, onRetry, empty, emptyMessage, children }) {
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 border">
       <h3 className="font-bold text-lg text-[#0d2c54] mb-4 flex items-center gap-2">
         <Icon size={20} /> {title}
       </h3>
       {subtitle && <p className="text-xs text-gray-400 -mt-2 mb-3">{subtitle}</p>}
-      {loading ? (
-        <div className="animate-pulse">
-          <div className="h-[280px] bg-gray-100 rounded-xl"></div>
-        </div>
-      ) : error ? (
+      {error ? (
         <div className="flex flex-col items-center justify-center text-center py-10">
           <AlertCircle size={32} className="mb-2 text-red-300" />
           <p className="text-sm font-medium text-red-600 mb-3">{error}</p>
@@ -99,6 +134,7 @@ export default function AdminDashboardPage() {
   const [donationsError, setDonationsError] = useState(null);
   const [applicationsError, setApplicationsError] = useState(null);
   const [selectedCurrency, setSelectedCurrency] = useState(null);
+  const [slowLoad, setSlowLoad] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -121,21 +157,21 @@ export default function AdminDashboardPage() {
     if (dashboardResult.status === 'fulfilled') {
       setStats(payloadOf(dashboardResult.value));
     } else {
-      console.error('[AdminDashboard] Failed to fetch dashboard stats:', dashboardResult.reason);
+      console.error('[AdminDashboard] Failed to load dashboard stats', dashboardResult.reason?.response?.status ?? 'unknown');
       setError(dashboardResult.reason?.response?.data?.message || 'Failed to load dashboard data');
     }
 
     if (donationsResult.status === 'fulfilled') {
       setDonationAnalytics(payloadOf(donationsResult.value));
     } else {
-      console.error('[AdminDashboard] Failed to fetch donation analytics:', donationsResult.reason);
+      console.error('[AdminDashboard] Failed to load donation analytics', donationsResult.reason?.response?.status ?? 'unknown');
       setDonationsError(donationsResult.reason?.response?.data?.message || 'Failed to load donation analytics');
     }
 
     if (applicationsResult.status === 'fulfilled') {
       setApplicationAnalytics(payloadOf(applicationsResult.value));
     } else {
-      console.error('[AdminDashboard] Failed to fetch application analytics:', applicationsResult.reason);
+      console.error('[AdminDashboard] Failed to load application analytics', applicationsResult.reason?.response?.status ?? 'unknown');
       setApplicationsError(applicationsResult.reason?.response?.data?.message || 'Failed to load application analytics');
     }
 
@@ -159,6 +195,19 @@ export default function AdminDashboardPage() {
       setSelectedCurrency(currenciesInData.includes('INR') ? 'INR' : currenciesInData[0]);
     }
   }, [currenciesInData.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cold-start affordance: if the initial load is unusually slow (e.g. the
+  // backend is waking up), surface a calm message + retry after ~18s. This is
+  // purely local UI — no change to API behavior, server timeouts, or auth/401
+  // handling, and it never logs the user out or invents a success/error state.
+  useEffect(() => {
+    if (!loading) {
+      setSlowLoad(false);
+      return undefined;
+    }
+    const timer = setTimeout(() => setSlowLoad(true), 18000);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   const activeCurrency = currenciesInData.includes(selectedCurrency) ? selectedCurrency : currenciesInData[0] || null;
 
@@ -190,7 +239,41 @@ export default function AdminDashboardPage() {
   ];
   const hasApplicationData = applicationStatusData.some((entry) => entry.value > 0) || appByInitiativeType.length > 0;
 
-  const initiativeChartHeight = Math.max(220, initiativeChartData.length * 44 + 40);
+  const initiativeChartHeight = Math.max(260, initiativeChartData.length * 52 + 40);
+
+  // Data-availability flag: lets the Pending Donations card show "—" rather than
+  // a misleading "0" when the donation analytics request failed / returned nothing.
+  const donationDataAvailable = !donationsError && donationStatusCounts != null;
+
+  // Screen-reader summaries. Monetary text is single-currency only (currencies
+  // are never combined or converted) and derived solely from real data.
+  const monthlyTotal = monthlyChartData.reduce((sum, row) => sum + row.amount, 0);
+  const monthlySummary = monthlyChartData.length === 0
+    ? 'No data available.'
+    : `Monthly successful donations in ${activeCurrency}. ${monthlyChartData.length} period${monthlyChartData.length === 1 ? '' : 's'}. Total ${formatAmount(activeCurrency, monthlyTotal)}. ${monthlyChartData.map((r) => `${r.month}: ${formatAmount(activeCurrency, r.amount)} from ${r.count} donation${r.count === 1 ? '' : 's'}`).join('. ')}.`;
+  const donationStatusSummary = donationStatusData.length === 0
+    ? 'No data available.'
+    : `Donations by status: ${donationStatusData.map((e) => `${e.name}: ${e.value}`).join(', ')}.`;
+  const donationInitiativeSummary = initiativeChartData.length === 0
+    ? 'No data available.'
+    : `Successful donations by initiative: ${initiativeChartData.map((e) => `${e.initiative}: ${e.count}`).join(', ')}.`;
+  const applicationStatusSummary = hasApplicationData
+    ? `Applications by status: ${applicationStatusData.map((e) => `${e.name}: ${e.value}`).join(', ')}.`
+    : 'No data available.';
+  const applicationInitiativeSummary = appByInitiativeType.length === 0
+    ? 'No data available.'
+    : `Applications by initiative type: ${appByInitiativeType.map((r) => `${labelize(r.type)}: ${Number(r.count ?? 0)}`).join(', ')}.`;
+
+  // Rollup that is not already surfaced on any individual card above: total
+  // applications summed across every status. Derived only from real API data
+  // (analytics counts when present, dashboard stats as fallback). No new or
+  // fabricated metric.
+  const totalApplications = Number(
+    (appStatusCounts?.PENDING ?? stats?.pendingApplications ?? 0) +
+    (appStatusCounts?.UNDER_REVIEW ?? stats?.underReviewApplications ?? 0) +
+    (appStatusCounts?.APPROVED ?? stats?.approvedApplications ?? 0) +
+    (appStatusCounts?.REJECTED ?? stats?.rejectedApplications ?? 0)
+  );
 
   // Widget configuration using backend DTO field names.
   // NOTE: totalDonations is a SUCCESS-only count in the backend DTO, so it is
@@ -198,8 +281,8 @@ export default function AdminDashboardPage() {
   const widgets = [
     { icon: Users, label: 'Total Users', value: stats?.totalUsers, color: 'from-blue-500 to-cyan-500', bg: 'bg-blue-50' },
     { icon: DollarSign, label: 'Successful Donations', value: stats?.totalDonations, color: 'from-green-500 to-emerald-500', bg: 'bg-green-50' },
-    { icon: Clock, label: 'Pending Donations', value: donationStatusCounts?.PENDING, color: 'from-amber-500 to-yellow-500', bg: 'bg-amber-50' },
-    { icon: Clock, label: 'Under Review Applications', value: stats?.underReviewApplications, color: 'from-sky-500 to-blue-500', bg: 'bg-sky-50' },
+    { icon: Hourglass, label: 'Pending Donations', value: donationStatusCounts?.PENDING, color: 'from-amber-500 to-yellow-500', bg: 'bg-amber-50', available: donationDataAvailable },
+    { icon: Search, label: 'Under Review Applications', value: stats?.underReviewApplications, color: 'from-sky-500 to-blue-500', bg: 'bg-sky-50' },
     { icon: FileText, label: 'Pending Applications', value: stats?.pendingApplications, color: 'from-yellow-500 to-orange-500', bg: 'bg-yellow-50' },
     { icon: CheckCircle, label: 'Approved Applications', value: stats?.approvedApplications, color: 'from-green-500 to-teal-500', bg: 'bg-green-50' },
     { icon: XCircle, label: 'Rejected Applications', value: stats?.rejectedApplications, color: 'from-red-500 to-pink-500', bg: 'bg-red-50' },
@@ -216,6 +299,23 @@ export default function AdminDashboardPage() {
           <h1 className="text-3xl font-bold text-[#0d2c54]">Admin Dashboard</h1>
           <p className="text-gray-500">Loading dashboard data...</p>
         </div>
+        {slowLoad && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+          >
+            <p className="text-sm text-amber-800">
+              The server is taking a little longer to respond. It may be waking up.
+            </p>
+            <button
+              onClick={fetchDashboardData}
+              className="shrink-0 px-4 py-2 bg-[#0d2c54] text-white text-sm rounded-lg hover:bg-[#123a6e] transition"
+            >
+              Retry
+            </button>
+          </div>
+        )}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
           {[...Array(10)].map((_, i) => (
             <div key={i} className="bg-gray-100 rounded-2xl p-6 border animate-pulse">
@@ -273,19 +373,19 @@ export default function AdminDashboardPage() {
       ) : (
         /* Stat Cards — values from GET /api/admin/dashboard */
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-          {widgets.map(({ icon: Icon, label, value, color, bg }, index) => (
+          {widgets.map(({ icon: Icon, label, value, color, bg, available = true }, index) => (
             <motion.div
               key={label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className={`${bg} rounded-2xl p-6 border`}
+              className={`${bg} rounded-2xl p-6 border shadow-sm`}
             >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">{label}</p>
                   <p className="text-2xl font-bold text-[#0d2c54] mt-1">
-                    {Number(value ?? 0).toLocaleString()}
+                    {available ? Number(value ?? 0).toLocaleString() : '—'}
                   </p>
                 </div>
                 <div className={`w-12 h-12 bg-gradient-to-br ${color} rounded-xl flex items-center justify-center`}>
@@ -307,11 +407,11 @@ export default function AdminDashboardPage() {
       )}
 
       {/* Donation Analytics — GET /api/admin/analytics/donations */}
+      <h2 className="text-2xl font-bold text-[#0d2c54] mb-4">Donation Analytics</h2>
       <div className="grid lg:grid-cols-2 gap-6 mb-6">
         <ChartCard
           title="Monthly Successful Donations"
           subtitle="Amounts shown per selected currency only — currencies are never combined or converted."
-          loading={false}
           error={donationsError}
           onRetry={fetchDashboardData}
           empty={byMonth.length === 0}
@@ -335,7 +435,8 @@ export default function AdminDashboardPage() {
               </select>
             </div>
           )}
-          <div className="w-full" role="img" aria-label={`Line chart of monthly successful donation amounts in ${activeCurrency || 'selected currency'}`}>
+          <p id="monthly-donations-summary" className="sr-only">{monthlySummary}</p>
+          <div className="w-full" role="img" aria-describedby="monthly-donations-summary" aria-label={`Line chart of monthly successful donation amounts in ${activeCurrency || 'selected currency'}`}>
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={monthlyChartData} margin={{ top: 5, right: 16, bottom: 5, left: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -364,13 +465,13 @@ export default function AdminDashboardPage() {
           title="Donation Status"
           subtitle="Successful payment status is shown here; amounts are intentionally excluded (multi-currency)."
           icon={CreditCard}
-          loading={false}
           error={donationsError}
           onRetry={fetchDashboardData}
           empty={donationStatusData.length === 0}
           emptyMessage="No donation data available yet."
         >
-          <div className="w-full" role="img" aria-label="Pie chart of donation counts by payment status">
+          <p id="donation-status-summary" className="sr-only">{donationStatusSummary}</p>
+          <div className="w-full" role="img" aria-describedby="donation-status-summary" aria-label="Pie chart of donation counts by payment status">
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
@@ -409,7 +510,6 @@ export default function AdminDashboardPage() {
           title="Successful Donations by Currency"
           icon={Layers}
           subtitle="Each currency is kept separate. No grand total is shown because currencies must not be added together."
-          loading={false}
           error={donationsError}
           onRetry={fetchDashboardData}
           empty={byCurrency.length === 0}
@@ -444,13 +544,13 @@ export default function AdminDashboardPage() {
           title="Donation Distribution by Initiative"
           icon={Heart}
           subtitle="Successful donation counts grouped by the initiative label donors selected (count-only; the API provides no per-currency breakdown here)."
-          loading={false}
           error={donationsError}
           onRetry={fetchDashboardData}
           empty={initiativeChartData.length === 0}
           emptyMessage="No donation data available yet."
         >
-          <div className="w-full" role="img" aria-label="Bar chart of successful donation counts by initiative">
+          <p id="donation-initiative-summary" className="sr-only">{donationInitiativeSummary}</p>
+          <div className="w-full" role="img" aria-describedby="donation-initiative-summary" aria-label="Bar chart of successful donation counts by initiative">
             <ResponsiveContainer width="100%" height={initiativeChartHeight}>
               <BarChart data={initiativeChartData} layout="vertical" margin={{ top: 5, right: 24, bottom: 5, left: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false} />
@@ -458,10 +558,10 @@ export default function AdminDashboardPage() {
                 <YAxis
                   type="category"
                   dataKey="initiative"
-                  tick={{ fontSize: 12 }}
+                  tick={<CategoryYTick />}
                   tickLine={false}
                   axisLine={false}
-                  width={130}
+                  width={120}
                 />
                 <Tooltip formatter={(value) => [Number(value).toLocaleString(), 'Successful Donations']} />
                 <Legend />
@@ -473,17 +573,18 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Application Analytics — GET /api/admin/analytics/applications */}
+      <h2 className="text-2xl font-bold text-[#0d2c54] mb-4">Application Analytics</h2>
       <ChartCard
         title="Initiative Applications"
         subtitle="Status counts and distribution by initiative type (enum values shown with readable labels)."
         icon={FileText}
-        loading={false}
         error={applicationsError}
         onRetry={fetchDashboardData}
         empty={!hasApplicationData}
         emptyMessage="No application data available yet."
       >
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <p id="application-status-summary" className="sr-only">{applicationStatusSummary}</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" role="group" aria-describedby="application-status-summary">
           {applicationStatusData.map((entry) => (
             <div key={entry.name} className="text-center p-4 bg-gray-50 rounded-xl border">
               <p className="text-2xl font-bold" style={{ color: entry.color }}>{entry.value.toLocaleString()}</p>
@@ -492,11 +593,22 @@ export default function AdminDashboardPage() {
           ))}
         </div>
         {appByInitiativeType.length > 0 ? (
-          <div className="w-full" role="img" aria-label="Bar chart of initiative application counts by initiative type">
+          <>
+            <p id="application-initiative-summary" className="sr-only">{applicationInitiativeSummary}</p>
+            <div className="w-full" role="img" aria-describedby="application-initiative-summary" aria-label="Bar chart of initiative application counts by initiative type">
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={appByInitiativeType.map((row) => ({ label: labelize(row.type), count: Number(row.count ?? 0) }))} margin={{ top: 5, right: 16, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} interval={0} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  interval={0}
+                  angle={-30}
+                  textAnchor="end"
+                  height={70}
+                />
                 <YAxis tick={{ fontSize: 12 }} allowDecimals={false} tickLine={false} axisLine={false} />
                 <Tooltip formatter={(value) => [value, 'Applications']} />
                 <Bar dataKey="count" name="Applications" radius={[6, 6, 0, 0]} barSize={40}>
@@ -507,40 +619,21 @@ export default function AdminDashboardPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
+          </>
         ) : (
           <p className="text-sm text-gray-400 text-center py-4">No application data available yet.</p>
         )}
       </ChartCard>
 
-      {/* Quick Stats Summary (dashboard endpoint values only) */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border mt-8">
-        <h3 className="font-bold text-lg text-[#0d2c54] mb-4 flex items-center gap-2">
-          <Heart size={20} className="text-orange-500" /> Platform Summary
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4 bg-blue-50 rounded-xl">
-            <p className="text-3xl font-bold text-[#0d2c54]">{Number(stats?.totalUsers ?? 0).toLocaleString()}</p>
-            <p className="text-sm text-gray-500 mt-1">Registered Users</p>
+      {/* Platform Summary — only the rollup not already shown on the cards above */}
+      <h2 className="text-2xl font-bold text-[#0d2c54] mb-4 mt-8">Platform Summary</h2>
+      <div className="bg-white rounded-2xl shadow-lg p-6 border">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl bg-purple-50 px-5 py-4">
+          <div>
+            <p className="text-sm font-semibold text-gray-700">Total Applications</p>
+            <p className="text-xs text-gray-500 mt-0.5">Every initiative application across all statuses.</p>
           </div>
-          <div className="text-center p-4 bg-green-50 rounded-xl">
-            <p className="text-3xl font-bold text-green-600">{Number(stats?.totalDonations ?? 0).toLocaleString()}</p>
-            <p className="text-sm text-gray-500 mt-1">Successful Donations</p>
-          </div>
-          <div className="text-center p-4 bg-purple-50 rounded-xl">
-            <p className="text-3xl font-bold text-purple-600">
-              {Number(
-                (appStatusCounts?.PENDING ?? stats?.pendingApplications ?? 0) +
-                (appStatusCounts?.UNDER_REVIEW ?? stats?.underReviewApplications ?? 0) +
-                (appStatusCounts?.APPROVED ?? stats?.approvedApplications ?? 0) +
-                (appStatusCounts?.REJECTED ?? stats?.rejectedApplications ?? 0)
-              ).toLocaleString()}
-            </p>
-            <p className="text-sm text-gray-500 mt-1">Total Applications</p>
-          </div>
-          <div className="text-center p-4 bg-orange-50 rounded-xl">
-            <p className="text-3xl font-bold text-orange-600">{Number(stats?.totalVolunteers ?? 0).toLocaleString()}</p>
-            <p className="text-sm text-gray-500 mt-1">Active Volunteers</p>
-          </div>
+          <p className="text-3xl font-bold text-purple-600">{totalApplications.toLocaleString()}</p>
         </div>
       </div>
     </div>
