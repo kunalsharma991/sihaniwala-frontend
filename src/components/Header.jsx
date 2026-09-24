@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Heart, Phone, Mail } from 'lucide-react';
-import logoImg from '../assets/images/logo.jpg.jpeg';
+import logoImg from '../assets/images/sihaniwala-foundation-logo.png';
 
 const navLinks = [
   { name: 'Home', path: '/' },

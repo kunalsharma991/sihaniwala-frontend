@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Heart, MapPin, Phone, Mail, ExternalLink, ArrowUp } from 'lucide-react';
+import { MapPin, Phone, Mail, ExternalLink, ArrowUp } from 'lucide-react';
 
 const socialIcons = [
   { name: 'Facebook', svg: <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg> },
@@ -7,7 +7,7 @@ const socialIcons = [
   { name: 'Twitter', svg: <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg> },
   { name: 'Youtube', svg: <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.43z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="#0d2c54"/></svg> },
 ];
-import logoImg from '../assets/images/logo.jpg.jpeg';
+import logoImg from '../assets/images/sihaniwala-foundation-logo.png';
 
 const quickLinks = [
   { name: 'Home', path: '/' },
@@ -146,8 +146,8 @@ export default function Footer() {
           <p className="text-gray-500 text-xs text-center md:text-left">
             &copy; {new Date().getFullYear()} Sihaniwala Foundation Charitable Trust. All rights reserved.
           </p>
-          <p className="text-gray-500 text-xs flex items-center gap-1.5">
-            Made with <Heart size={12} className="text-red-500 fill-current" /> for Humanity
+          <p className="text-gray-500 text-xs text-center md:text-left">
+            Design & Developed by Kunal Sharma
           </p>
         </div>
       </div>
